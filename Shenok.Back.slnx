@@ -10,6 +10,12 @@
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Infrastructure/Shenok.Back.ContentService.Infrastructure.csproj" Id="d8a3e4be-285d-41ca-8b91-9a5d2f6d4757" />
     <Project Path="src/Services/Content/Shenok.ContentService.Domain/Shenok.ContentService.Domain.csproj" />
   </Folder>
+  <Folder Name="/src/Services/Engagement/">
+    <Project Path="src/Services/Engagement/Shenok.Back.EngagementService.Api/Shenok.Back.EngagementService.Api.csproj" Id="f5cac29a-ddc9-4fdf-9ac2-17ea2d9d1fdd" />
+    <Project Path="src/Services/Engagement/Shenok.Back.EngagementService.Application/Shenok.Back.EngagementService.Application.csproj" Id="8e4d226c-5f5c-46ae-b6a3-e11fe8f2e562" />
+    <Project Path="src/Services/Engagement/Shenok.Back.EngagementService.Domain/Shenok.Back.EngagementService.Domain.csproj" Id="d1947540-bf05-4d98-8be4-462f8396a1ad" />
+    <Project Path="src/Services/Engagement/Shenok.Back.EngagementService.Infrastructure/Shenok.Back.EngagementService.Infrastructure.csproj" Id="9f028848-03fd-4671-b7be-9f55c57be165" />
+  </Folder>
   <Folder Name="/src/Services/Identity/">
     <Project Path="src/Services/Identity/Shenok.Back.IdentityService.Api/Shenok.Back.IdentityService.Api.csproj" Id="d9e78f3a-f737-46e7-ab03-aeb823300161" />
     <Project Path="src/Services/Identity/Shenok.Back.IdentityService.Application/Shenok.Back.IdentityService.Application.csproj" Id="e03c045e-9dce-4d87-82bf-c92175433fde" />
