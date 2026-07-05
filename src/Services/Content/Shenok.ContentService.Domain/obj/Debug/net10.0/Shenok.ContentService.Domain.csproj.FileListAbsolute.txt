@@ -1,0 +1,11 @@
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\bin\Debug\net10.0\Shenok.ContentService.Domain.deps.json
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\bin\Debug\net10.0\Shenok.ContentService.Domain.dll
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\bin\Debug\net10.0\Shenok.ContentService.Domain.pdb
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\Shenok.ContentService.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\Shenok.ContentService.Domain.AssemblyInfoInputs.cache
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\Shenok.ContentService.Domain.AssemblyInfo.cs
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\Shenok.ContentService.Domain.csproj.CoreCompileInputs.cache
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\Shenok.ContentService.Domain.dll
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\refint\Shenok.ContentService.Domain.dll
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\Shenok.ContentService.Domain.pdb
+D:\Shenok\Shenok.Back\src\Services\Content\Shenok.ContentService.Domain\obj\Debug\net10.0\ref\Shenok.ContentService.Domain.dll
