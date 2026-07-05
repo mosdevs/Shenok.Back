@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore.txt" />
+  </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/Services/" />
   <Folder Name="/src/Services/Content/">
@@ -6,5 +9,17 @@
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Application/Shenok.Back.ContentService.Application.csproj" Id="cf721847-8497-4d4b-949e-c6195f1c0b9b" />
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Infrastructure/Shenok.Back.ContentService.Infrastructure.csproj" Id="d8a3e4be-285d-41ca-8b91-9a5d2f6d4757" />
     <Project Path="src/Services/Content/Shenok.ContentService.Domain/Shenok.ContentService.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Identity/">
+    <Project Path="src/Services/Identity/Shenok.Back.IdentityService.Api/Shenok.Back.IdentityService.Api.csproj" Id="d9e78f3a-f737-46e7-ab03-aeb823300161" />
+    <Project Path="src/Services/Identity/Shenok.Back.IdentityService.Application/Shenok.Back.IdentityService.Application.csproj" Id="e03c045e-9dce-4d87-82bf-c92175433fde" />
+    <Project Path="src/Services/Identity/Shenok.Back.IdentityService.Domain/Shenok.Back.IdentityService.Domain.csproj" Id="f220cfa8-1654-4e4d-b336-0f6d14ebaafc" />
+    <Project Path="src/Services/Identity/Shenok.Back.IdentityService.Infrastructure/Shenok.Back.IdentityService.Infrastructure.csproj" Id="1d0a66ac-064c-431f-9b91-584fb0eecb8b" />
+  </Folder>
+  <Folder Name="/src/Services/Recognition/">
+    <Project Path="src/Services/Recognition/Shenok.Back.RecognitionService.Api/Shenok.Back.RecognitionService.Api.csproj" Id="2687d05f-2096-4a28-827d-4853470d5043" />
+    <Project Path="src/Services/Recognition/Shenok.Back.RecognitionService.Application/Shenok.Back.RecognitionService.Application.csproj" Id="2dacb14c-e194-4f7d-bdcf-088132c21d38" />
+    <Project Path="src/Services/Recognition/Shenok.Back.RecognitionService.Domain/Shenok.Back.RecognitionService.Domain.csproj" Id="d5e7a535-9c3b-4fba-9473-2d2d9ca46bb0" />
+    <Project Path="src/Services/Recognition/Shenok.Back.RecognitionService.Infrastructure/Shenok.Back.RecognitionService.Infrastructure.csproj" Id="9fe81271-31e6-4f2c-8326-afc0445a748f" />
   </Folder>
 </Solution>
