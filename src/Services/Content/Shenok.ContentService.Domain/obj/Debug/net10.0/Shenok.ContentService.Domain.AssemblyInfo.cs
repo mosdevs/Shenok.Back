@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Shenok.ContentService.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4db27e041ccd806d2759bc7a1df77689e5cfcf12")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b00671c4b2746ccb113acbb12c8c9a789237f7d9")]
 [assembly: System.Reflection.AssemblyProductAttribute("Shenok.ContentService.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Shenok.ContentService.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
