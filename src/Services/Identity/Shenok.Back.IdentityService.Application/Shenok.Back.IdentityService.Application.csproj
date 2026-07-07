@@ -6,4 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Auth\UseCases\Login\" />
+    <Folder Include="Auth\UseCases\Logout\" />
+    <Folder Include="Auth\UseCases\RefreshToken\" />
+    <Folder Include="Common\" />
+    <Folder Include="Users\UseCases\ChangePassword\" />
+    <Folder Include="Users\UseCases\GetUserProfile\" />
+    <Folder Include="Users\UseCases\UpdateUser\" />
+    <Folder Include="Users\UseCases\VerifyUser\" />
+    <Folder Include="Users\UseCases\RegisterUsers\" />
+  </ItemGroup>
+
 </Project>
