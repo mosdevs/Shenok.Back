@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\Interfaces\" />
+    <Folder Include="IndexMaintenance\UseCases\AddIndexEntry\" />
+    <Folder Include="IndexMaintenance\UseCases\RemoveIndesEntry\" />
+    <Folder Include="Recognition\UseCases\RecognizeWaveform\" />
+  </ItemGroup>
+
 </Project>
