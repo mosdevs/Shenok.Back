@@ -6,4 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\Interfaces\" />
+    <Folder Include="Follows\UseCases\FollowPage\" />
+    <Folder Include="Follows\UseCases\GetFollowStatus\" />
+    <Folder Include="Follows\UseCases\UnFollowPage\" />
+    <Folder Include="Listening\UseCases\GetListeningStateForPage\" />
+    <Folder Include="Listening\UseCases\GetListeningStateForVoice\" />
+    <Folder Include="Listening\UseCases\RecordPlaybackProgress\" />
+    <Folder Include="Unlocks\UseCases\GetPageUnlockState\" />
+    <Folder Include="Unlocks\UseCases\RegisterScanAndUnlock\" />
+  </ItemGroup>
+
 </Project>

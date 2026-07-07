@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Aggregates\ListeningRecords\" />
+    <Folder Include="Aggregates\UserPageRelationships\" />
+    <Folder Include="DomainEvents\" />
+    <Folder Include="Exceptions\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>
