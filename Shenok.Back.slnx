@@ -28,4 +28,7 @@
     <Project Path="src/Services/Recognition/Shenok.Back.RecognitionService.Domain/Shenok.Back.RecognitionService.Domain.csproj" Id="d5e7a535-9c3b-4fba-9473-2d2d9ca46bb0" />
     <Project Path="src/Services/Recognition/Shenok.Back.RecognitionService.Infrastructure/Shenok.Back.RecognitionService.Infrastructure.csproj" Id="9fe81271-31e6-4f2c-8326-afc0445a748f" />
   </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj" Id="e023aa78-da99-4f3f-84f7-927d6f53e6b0" />
+  </Folder>
 </Solution>
