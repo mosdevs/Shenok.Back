@@ -13,8 +13,8 @@ namespace Shenok.Back.IdentityService.Infrastructure.Configurations
 
             builder.Property(u => u.Id)
                 .HasConversion(
-                    userId => userId.Value,
-                    value => UserId.From(value));
+                    userId => userId.Value, //to db
+                    value => UserId.From(value)); //from db
 
             builder.OwnsOne(u => u.Email, email =>
             {
