@@ -2,7 +2,7 @@
 
 namespace Shenok.Back.SharedKernel
 {
-    public abstract class AggregateRoot<TID>
+    public abstract class AggregateRoot<TID> : IHasDomainEvents
     {
         public TID Id { get; protected set; } = default!;
         private readonly List<IDomainEvent> _domainEvents = new();
