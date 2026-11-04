@@ -44,7 +44,10 @@ internal static class IdentitySwagger
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "Shenok Identity");
             options.DocumentTitle = "Shenok Identity";
+            options.RoutePrefix = "swagger";
         });
+
+        app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
         return app;
     }
