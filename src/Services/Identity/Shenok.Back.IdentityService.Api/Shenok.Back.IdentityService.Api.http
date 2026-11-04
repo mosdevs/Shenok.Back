@@ -1,6 +1,54 @@
 @Shenok.Back.IdentityService.Api_HostAddress = http://localhost:5203
+@InternalKey = dev-internal-key
 
-GET {{Shenok.Back.IdentityService.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Register with an Iranian mobile. Development captures the OTP in memory unless Kavenegar is configured.
+POST {{Shenok.Back.IdentityService.Api_HostAddress}}/register
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "username": "listener1",
+  "displayName": "Listener",
+  "phoneNumber": "09120000000"
+}
 
 ###
+
+POST {{Shenok.Back.IdentityService.Api_HostAddress}}/otp/confirm
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "phoneNumber": "09120000000",
+  "code": "123456",
+  "purpose": "register"
+}
+
+###
+
+POST {{Shenok.Back.IdentityService.Api_HostAddress}}/otp/request
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "phoneNumber": "09120000000",
+  "purpose": "login"
+}
+
+###
+
+POST {{Shenok.Back.IdentityService.Api_HostAddress}}/login
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "email": "listener@example.com",
+  "password": "Secret123"
+}
+
+###
+
+GET {{Shenok.Back.IdentityService.Api_HostAddress}}/users/me
+X-Internal-Key: {{InternalKey}}
+X-User-Id: 00000000-0000-0000-0000-000000000000
+X-User-Roles: Listener

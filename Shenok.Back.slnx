@@ -31,4 +31,8 @@
   <Folder Name="/src/Shared/">
     <Project Path="src/Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj" Id="e023aa78-da99-4f3f-84f7-927d6f53e6b0" />
   </Folder>
+  <Folder Name="/tests/Identity/">
+    <Project Path="tests/Identity/Shenok.Back.IdentityService.Domain.Tests/Shenok.Back.IdentityService.Domain.Tests.csproj" />
+    <Project Path="tests/Identity/Shenok.Back.IdentityService.IntegrationTests/Shenok.Back.IdentityService.IntegrationTests.csproj" />
+  </Folder>
 </Solution>

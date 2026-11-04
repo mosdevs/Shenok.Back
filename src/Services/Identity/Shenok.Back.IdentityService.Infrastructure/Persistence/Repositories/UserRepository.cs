@@ -1,41 +1,32 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Shenok.Back.IdentityService.Domain.Aggregates.Users;
 using Shenok.Back.IdentityService.Domain.Repositories;
-using System.Threading.Tasks;
 
-namespace Shenok.Back.IdentityService.Infrastructure.Persistence.Repositories
+namespace Shenok.Back.IdentityService.Infrastructure.Persistence.Repositories;
+
+public sealed class UserRepository(IdentityDbContext db) : IUserRepository
 {
-    public class UserRepository : IUserRepository
-    {
-        private readonly IdentityDbContext _dbContext;
+    public Task AddAsync(User user, CancellationToken ct = default) =>
+        db.Users.AddAsync(user, ct).AsTask();
 
-        public UserRepository(IdentityDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
+    public Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default) =>
+        db.Users.AnyAsync(user => user.Email != null && user.Email.Value == email.Value, ct);
 
-        public async Task AddAsync(User user, CancellationToken ct = default)
-        {
-            await _dbContext.Users.AddAsync(user, ct);
-        }
+    public Task<bool> ExistsByPhoneAsync(PhoneNumber phoneNumber, CancellationToken ct = default) =>
+        db.Users.AnyAsync(user => user.PhoneNumber != null && user.PhoneNumber.Value == phoneNumber.Value, ct);
 
-        public async Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default)
-        {
-            return await _dbContext.Users
-                .AnyAsync(u => u.Email == email, ct);
-        }
+    public Task<bool> ExistsByUsernameAsync(string username, CancellationToken ct = default) =>
+        db.Users.AnyAsync(user => user.Profile.Username == username, ct);
 
-        public async Task<User?> GetByEmailAsync(Email email, CancellationToken ct = default)
-        {
-            return await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Email == email, ct);
-        }
+    public Task<User?> GetByEmailAsync(Email email, CancellationToken ct = default) =>
+        db.Users.AsTracking().FirstOrDefaultAsync(user => user.Email != null && user.Email.Value == email.Value, ct);
 
-        public async Task<User?> GetByIdAsync(UserId id, CancellationToken ct = default)
-        {
-            return await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Id == id, ct);
-        }
+    public Task<User?> GetByIdAsync(UserId id, CancellationToken ct = default) =>
+        db.Users.AsTracking().FirstOrDefaultAsync(user => user.Id == id, ct);
 
-    }
+    public Task<User?> GetByPhoneAsync(PhoneNumber phoneNumber, CancellationToken ct = default) =>
+        db.Users.AsTracking().FirstOrDefaultAsync(user => user.PhoneNumber != null && user.PhoneNumber.Value == phoneNumber.Value, ct);
+
+    public Task<User?> GetByUsernameAsync(string username, CancellationToken ct = default) =>
+        db.Users.AsTracking().FirstOrDefaultAsync(user => user.Profile.Username == username, ct);
 }

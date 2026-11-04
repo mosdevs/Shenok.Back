@@ -7,15 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Auth\UseCases\Login\" />
-    <Folder Include="Auth\UseCases\Logout\" />
-    <Folder Include="Auth\UseCases\RefreshToken\" />
-    <Folder Include="Common\" />
-    <Folder Include="Users\UseCases\ChangePassword\" />
-    <Folder Include="Users\UseCases\GetUserProfile\" />
-    <Folder Include="Users\UseCases\UpdateUser\" />
-    <Folder Include="Users\UseCases\VerifyUser\" />
-    <Folder Include="Users\UseCases\RegisterUsers\" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.Application.Abstractions\Shenok.Back.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\Shenok.Back.IdentityService.Domain\Shenok.Back.IdentityService.Domain.csproj" />
   </ItemGroup>
 
 </Project>
