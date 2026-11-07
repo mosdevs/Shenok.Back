@@ -1918,14 +1918,14 @@
         }
       }
     },
-    "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
+    "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
+        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
         "projectName": "Shenok.Back.WaveformCodec",
-        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
+        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
         "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\3b25a874bb0f939abdf49a882fbd9d73\\nuget",
-        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\obj\\",
+        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

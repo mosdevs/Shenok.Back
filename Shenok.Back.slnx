@@ -36,6 +36,7 @@
   <Folder Name="/tests/Content/">
     <Project Path="tests/Content/Shenok.Back.ContentService.Application.Tests/Shenok.Back.ContentService.Application.Tests.csproj" />
     <Project Path="tests/Content/Shenok.Back.ContentService.Domain.Tests/Shenok.Back.ContentService.Domain.Tests.csproj" />
+    <Project Path="tests/Content/Shenok.Back.ContentService.Infrastructure.Tests/Shenok.Back.ContentService.Infrastructure.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Identity/">
     <Project Path="tests/Identity/Shenok.Back.IdentityService.Domain.Tests/Shenok.Back.IdentityService.Domain.Tests.csproj" />

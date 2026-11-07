@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Shenok.Back.ContentService.Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Shenok.Back.ContentService.Application\Shenok.Back.ContentService.Application.csproj" />
     <ProjectReference Include="..\Shenok.Back.ContentService.Domain\Shenok.Back.ContentService.Domain.csproj" />
   </ItemGroup>
