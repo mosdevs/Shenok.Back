@@ -35,11 +35,8 @@ public sealed class DomainEventDispatcherInterceptor(IDomainEventDispatcher disp
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
     }
 
-    public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
-    {
-        DispatchAsync(eventData.Context, CancellationToken.None).GetAwaiter().GetResult();
-        return base.SavedChanges(eventData, result);
-    }
+    public override int SavedChanges(SaveChangesCompletedEventData eventData, int result) =>
+        throw new InvalidOperationException("Content changes must be saved asynchronously.");
 
     public override Task SaveChangesFailedAsync(
         DbContextErrorEventData eventData,

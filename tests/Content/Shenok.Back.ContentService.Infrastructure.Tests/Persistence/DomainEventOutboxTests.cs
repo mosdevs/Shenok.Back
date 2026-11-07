@@ -79,16 +79,16 @@ public sealed class DomainEventOutboxTests(InfrastructureFixture fixture)
         fixture.Events.Clear();
         fixture.Events.ThrowOnWaveformRegistered = true;
 
+        var eventId = mapping.DomainEvents.Single().EventId;
         try
         {
             await using var scope = fixture.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
             db.Add(mapping);
-            var exception = await Assert.ThrowsAnyAsync<Exception>(() => db.SaveChangesAsync());
-            var root = exception;
-            while (root is System.Reflection.TargetInvocationException { InnerException: not null } wrapped)
-                root = wrapped.InnerException;
-            Assert.Equal("Handler failed after the row was committed.", root!.Message);
+            await db.SaveChangesAsync();
+            Assert.Contains(
+                fixture.Events.Events,
+                domainEvent => domainEvent is WaveformRegisteredDomainEvent registered && registered.EventId == eventId);
         }
         finally
         {
@@ -97,7 +97,7 @@ public sealed class DomainEventOutboxTests(InfrastructureFixture fixture)
 
         await using var read = fixture.CreateBareContext();
         Assert.True(await read.WaveformMappings.AsNoTracking().AnyAsync(item => item.Id == mapping.Id));
-        Assert.True(await read.OutboxMessages.AsNoTracking().AnyAsync(message => message.Id == mapping.DomainEvents.Single().EventId));
+        Assert.True(await read.OutboxMessages.AsNoTracking().AnyAsync(message => message.Id == eventId));
     }
 
     [Fact]

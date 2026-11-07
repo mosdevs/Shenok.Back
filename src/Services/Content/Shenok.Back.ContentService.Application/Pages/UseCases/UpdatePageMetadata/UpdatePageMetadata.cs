@@ -36,7 +36,7 @@ public sealed class UpdatePageMetadataUseCase(
             CoverImageUrl.Create(request.CoverImageUrl));
 
         await pages.UpdateAsync(page, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
     }
 }

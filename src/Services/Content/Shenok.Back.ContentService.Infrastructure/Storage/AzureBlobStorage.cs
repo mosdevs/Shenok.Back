@@ -3,6 +3,7 @@ using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
+using Shenok.Back.ContentService.Application.Common;
 using Shenok.Back.ContentService.Application.Common.Interfaces;
 using Shenok.Back.ContentService.Domain.Aggregates.Voices;
 
@@ -186,6 +187,9 @@ public sealed class AzureBlobStorage : IBlobStorage
 
     private static string RequireContentType(string contentType)
     {
+        if (AudioContentTypes.TryNormalize(contentType, out var audio))
+            return audio;
+
         if (string.IsNullOrWhiteSpace(contentType))
             throw new ArgumentException("Content type is required.", nameof(contentType));
 
@@ -194,17 +198,10 @@ public sealed class AzureBlobStorage : IBlobStorage
         if (separator >= 0)
             value = value[..separator].Trim();
 
-        if (value.Length is 0 or > AudioAsset.MaxContentTypeLength || !value.Contains('/'))
-            throw new ArgumentException("Content type is invalid.", nameof(contentType));
+        value = value.ToLowerInvariant();
+        if (value is "application/vnd.apple.mpegurl" or "video/mp2t")
+            return value;
 
-        foreach (var character in value)
-        {
-            if (char.IsAsciiLetterOrDigit(character) || character is '/' or '.' or '+' or '-')
-                continue;
-
-            throw new ArgumentException("Content type is invalid.", nameof(contentType));
-        }
-
-        return value.ToLowerInvariant();
+        throw new ArgumentException("Content type is invalid.", nameof(contentType));
     }
 }

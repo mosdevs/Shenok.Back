@@ -49,18 +49,20 @@ public sealed class WaveformPersistenceTests(InfrastructureFixture fixture)
     }
 
     [Fact]
-    public async Task Synchronous_save_maps_a_duplicate_waveform_code_the_same_way()
+    public async Task Synchronous_save_is_rejected_and_writes_nothing()
     {
         var page = ContentFactory.DraftPage();
         var code = ContentFactory.NextCode();
         await using var scope = fixture.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
-        var mappings = scope.ServiceProvider.GetRequiredService<IWaveformMappingRepository>();
-        await mappings.AddAsync(ContentFactory.PageMapping(page.Id, code));
-        ((DbContext)db).SaveChanges();
-        await mappings.AddAsync(ContentFactory.PageMapping(page.Id, code));
+        await scope.ServiceProvider.GetRequiredService<IWaveformMappingRepository>()
+            .AddAsync(ContentFactory.PageMapping(page.Id, code));
 
-        Assert.Throws<WaveformCodeAlreadyUsedException>(() => { ((DbContext)db).SaveChanges(); });
+        var exception = Assert.Throws<InvalidOperationException>(() => ((DbContext)db).SaveChanges());
+        Assert.Contains("asynchronously", exception.Message, StringComparison.Ordinal);
+
+        await using var read = fixture.CreateBareContext();
+        Assert.Equal(0, await read.WaveformMappings.CountAsync(mapping => mapping.WaveformCode == WaveformCode.From(code)));
     }
 
     [Fact]

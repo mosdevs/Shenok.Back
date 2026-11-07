@@ -49,7 +49,7 @@ public sealed class PackageVoiceUseCase(
         try
         {
             await voices.UpdateAsync(voice, cancellationToken);
-            await unitOfWork.SaveChanges(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (InvalidPackagingTransitionException)
         {

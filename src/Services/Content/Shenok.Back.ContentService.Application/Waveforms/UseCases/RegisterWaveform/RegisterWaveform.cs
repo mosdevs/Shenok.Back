@@ -74,7 +74,7 @@ public sealed class RegisterWaveformUseCase(
             try
             {
                 await mappings.AddAsync(mapping, cancellationToken);
-                await unitOfWork.SaveChanges(cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
                 return new RegisterWaveformResponse(
                     mapping.Id.Value,
                     mapping.WaveformCode.Value,

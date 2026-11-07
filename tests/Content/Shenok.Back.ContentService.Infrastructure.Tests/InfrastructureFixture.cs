@@ -66,7 +66,7 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         await using var probe = new MemoryStream([1]);
         using var smoke = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         await CreateBlobStorage().PutAsync(
-            new BlobUpload($"health/{Guid.NewGuid():N}", probe, "application/octet-stream", 1),
+            new BlobUpload($"health/{Guid.NewGuid():N}", probe, "audio/wav", 1),
             smoke.Token);
     }
 

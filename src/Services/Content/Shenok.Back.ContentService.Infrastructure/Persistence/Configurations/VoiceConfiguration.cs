@@ -53,6 +53,10 @@ public sealed class VoiceConfiguration : IEntityTypeConfiguration<Voice>
             .HasColumnName("page_id")
             .IsRequired();
         builder.HasIndex(voice => voice.PageId).HasDatabaseName("ix_voices_page_id");
+        builder.HasOne<Page>()
+            .WithMany()
+            .HasForeignKey(voice => voice.PageId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Property(voice => voice.Title)
             .HasConversion(title => title.Value, value => VoiceTitle.Create(value))
             .HasMaxLength(VoiceTitle.MaxLength)

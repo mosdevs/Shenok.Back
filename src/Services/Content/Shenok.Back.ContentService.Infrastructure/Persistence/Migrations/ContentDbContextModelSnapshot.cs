@@ -246,6 +246,12 @@ namespace Shenok.Back.ContentService.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Shenok.Back.ContentService.Domain.Aggregates.Voices.Voice", b =>
                 {
+                    b.HasOne("Shenok.Back.ContentService.Domain.Aggregates.Pages.Page", null)
+                        .WithMany()
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.OwnsOne("Shenok.Back.ContentService.Domain.Aggregates.Voices.AudioAsset", "Audio", b1 =>
                         {
                             b1.Property<Guid>("VoiceId")

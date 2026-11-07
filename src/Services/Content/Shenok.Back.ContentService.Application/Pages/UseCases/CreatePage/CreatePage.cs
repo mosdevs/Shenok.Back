@@ -33,7 +33,7 @@ public sealed class CreatePageUseCase(IContentCaller caller, IPageRepository pag
             CoverImageUrl.Create(request.CoverImageUrl));
 
         await pages.AddAsync(page, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return ContentMaps.ToPage(page, []);
     }
 }

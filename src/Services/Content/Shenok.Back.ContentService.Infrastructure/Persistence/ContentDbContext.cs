@@ -38,24 +38,8 @@ public sealed class ContentDbContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ContentDbContext).Assembly);
     }
 
-    public Task<int> SaveChanges(CancellationToken ct = default) => SaveChangesAsync(ct);
-
-    public override int SaveChanges()
-    {
-        try
-        {
-            return base.SaveChanges();
-        }
-        catch (DbUpdateException exception) when (IsWaveformCodeViolation(exception))
-        {
-            DetachAddedWaveformInserts();
-            throw new WaveformCodeAlreadyUsedException();
-        }
-        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
-        {
-            throw new ConflictException("A unique value is already in use.");
-        }
-    }
+    public override int SaveChanges() =>
+        throw new InvalidOperationException("Content changes must be saved asynchronously.");
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -65,29 +49,36 @@ public sealed class ContentDbContext : DbContext, IUnitOfWork
         }
         catch (DbUpdateException exception) when (IsWaveformCodeViolation(exception))
         {
-            DetachAddedWaveformInserts();
+            DetachAddedInserts();
             throw new WaveformCodeAlreadyUsedException();
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {
+            DetachAddedInserts();
             throw new ConflictException("A unique value is already in use.");
         }
     }
 
-    private void DetachAddedWaveformInserts()
+    private void DetachAddedInserts()
     {
         foreach (var entry in ChangeTracker.Entries().ToList())
         {
-            if (entry.State == EntityState.Added && entry.Entity is WaveformMapping or OutboxMessage)
+            if (entry.State == EntityState.Added)
                 entry.State = EntityState.Detached;
         }
     }
 
-    private static bool IsWaveformCodeViolation(DbUpdateException exception) =>
-        exception.InnerException is PostgresException postgres
-        && postgres.SqlState == PostgresErrorCodes.UniqueViolation
-        && (string.Equals(postgres.ConstraintName, WaveformMappingConfiguration.CodeIndexName, StringComparison.Ordinal)
-            || string.Equals(postgres.TableName, "waveform_mappings", StringComparison.Ordinal));
+    private static bool IsWaveformCodeViolation(DbUpdateException exception)
+    {
+        if (exception.InnerException is not PostgresException postgres
+            || postgres.SqlState != PostgresErrorCodes.UniqueViolation)
+            return false;
+
+        if (string.Equals(postgres.ConstraintName, WaveformMappingConfiguration.CodeIndexName, StringComparison.Ordinal))
+            return true;
+
+        return postgres.Message.Contains(WaveformMappingConfiguration.CodeIndexName, StringComparison.Ordinal);
+    }
 
     private static bool IsUniqueViolation(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgres

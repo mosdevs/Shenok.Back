@@ -32,7 +32,7 @@ public sealed class UpdateVoiceTitleUseCase(
         PageAccess.EnsureCanMutate(page, caller);
         voice.UpdateTitle(VoiceTitle.Create(request.Title), page.Status == PageStatus.Archived);
         await voices.UpdateAsync(voice, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return ContentMaps.ToVoice(voice);
     }
 }

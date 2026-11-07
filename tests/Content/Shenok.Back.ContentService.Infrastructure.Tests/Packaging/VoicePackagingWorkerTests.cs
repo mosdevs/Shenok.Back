@@ -13,7 +13,8 @@ public sealed class VoicePackagingWorkerTests(InfrastructureFixture fixture)
     {
         var connectionString = await fixture.CreateDatabaseAsync();
         await fixture.MigrateAsync(connectionString);
-        var pageId = ContentFactory.DraftPage().Id;
+        var page = ContentFactory.DraftPage();
+        var pageId = page.Id;
         var pending = ContentFactory.PendingVoice(pageId);
         var ready = ContentFactory.ReadyVoice(pageId);
         var failed = ContentFactory.FailedVoice(pageId);
@@ -21,7 +22,7 @@ public sealed class VoicePackagingWorkerTests(InfrastructureFixture fixture)
 
         await using (var db = fixture.CreateBareContext(connectionString))
         {
-            db.AddRange(pending, ready, failed);
+            db.AddRange(page, pending, ready, failed);
             await db.SaveChangesAsync();
         }
 

@@ -78,11 +78,22 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
     [Fact]
     public async Task Database_rejects_a_voice_outside_the_size_or_packaging_rules()
     {
-        await RejectAsync(VoiceSql(sizeBytes: 0, status: "Pending", duration: "NULL", playlist: "NULL", prefix: "NULL"));
-        await RejectAsync(VoiceSql(sizeBytes: 104857601, status: "Pending", duration: "NULL", playlist: "NULL", prefix: "NULL"));
-        await RejectAsync(VoiceSql(sizeBytes: 2048, status: "Ready", duration: "NULL", playlist: "NULL", prefix: "NULL"));
-        await RejectAsync(VoiceSql(sizeBytes: 2048, status: "Pending", duration: "12", playlist: "NULL", prefix: "NULL"));
-        await RejectAsync(VoiceSql(sizeBytes: 2048, status: "Broken", duration: "NULL", playlist: "NULL", prefix: "NULL"));
+        await RejectVoiceAsync(sizeBytes: 0, status: "Pending", duration: "NULL", playlist: "NULL", prefix: "NULL");
+        await RejectVoiceAsync(sizeBytes: 104857601, status: "Pending", duration: "NULL", playlist: "NULL", prefix: "NULL");
+        await RejectVoiceAsync(sizeBytes: 2048, status: "Ready", duration: "NULL", playlist: "NULL", prefix: "NULL");
+        await RejectVoiceAsync(sizeBytes: 2048, status: "Pending", duration: "12", playlist: "NULL", prefix: "NULL");
+        await RejectVoiceAsync(sizeBytes: 2048, status: "Broken", duration: "NULL", playlist: "NULL", prefix: "NULL");
+    }
+
+    [Fact]
+    public async Task Database_rejects_a_voice_whose_page_does_not_exist()
+    {
+        await using var connection = await OpenAsync();
+        await using var command = new NpgsqlCommand(
+            VoiceSql(Guid.NewGuid(), 2048, "Pending", "NULL", "NULL", "NULL"),
+            connection);
+        var exception = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync());
+        Assert.Equal(PostgresErrorCodes.ForeignKeyViolation, exception.SqlState);
     }
 
     [Fact]
@@ -138,13 +149,40 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
             method => method.Name.Contains("Increment", StringComparison.Ordinal));
     }
 
-    private static string VoiceSql(long sizeBytes, string status, string duration, string playlist, string prefix) =>
+    private async Task RejectVoiceAsync(long sizeBytes, string status, string duration, string playlist, string prefix)
+    {
+        await using var connection = await OpenAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
+        var pageId = Guid.NewGuid();
+        await using (var page = new NpgsqlCommand(
+            """
+            INSERT INTO pages (id, title, description, owner_id, created_at, status, voice_ids)
+            VALUES (@id, 'Night', 'Quiet', @owner, now(), 'Draft', '[]'::jsonb)
+            """,
+            connection,
+            transaction))
+        {
+            page.Parameters.AddWithValue("id", pageId);
+            page.Parameters.AddWithValue("owner", Guid.NewGuid());
+            await page.ExecuteNonQueryAsync();
+        }
+
+        await using var voice = new NpgsqlCommand(
+            VoiceSql(pageId, sizeBytes, status, duration, playlist, prefix),
+            connection,
+            transaction);
+        var exception = await Assert.ThrowsAsync<PostgresException>(() => voice.ExecuteNonQueryAsync());
+        Assert.Equal(PostgresErrorCodes.CheckViolation, exception.SqlState);
+        await transaction.RollbackAsync();
+    }
+
+    private static string VoiceSql(Guid pageId, long sizeBytes, string status, string duration, string playlist, string prefix) =>
         $"""
         INSERT INTO voices (
             id, page_id, title, duration_seconds, source_storage_key, source_content_type,
             size_bytes, playlist_storage_key, segment_prefix, packaging_status)
         VALUES (
-            '{Guid.NewGuid()}', '{Guid.NewGuid()}', 'Episode', {duration},
+            '{Guid.NewGuid()}', '{pageId}', 'Episode', {duration},
             'sources/{Guid.NewGuid():N}', 'audio/wav', {sizeBytes}, {playlist}, {prefix}, '{status}')
         """;
 

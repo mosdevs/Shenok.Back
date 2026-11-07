@@ -53,6 +53,8 @@ public sealed class AzureBlobStorageGuardTests
     [InlineData("audio")]
     [InlineData("audio/wav\r\nX-Injected: yes")]
     [InlineData("audio/wav<script>")]
+    [InlineData("text/html")]
+    [InlineData("text/html; charset=utf-8")]
     public async Task Put_rejects_a_malformed_content_type(string contentType)
     {
         var storage = UnconnectedStorage();

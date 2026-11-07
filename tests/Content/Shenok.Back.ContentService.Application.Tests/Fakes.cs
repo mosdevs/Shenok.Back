@@ -21,7 +21,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
     public int Saves { get; private set; }
     public Exception? Failure { get; set; }
 
-    public Task<int> SaveChanges(CancellationToken ct = default)
+    public Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         if (Failure is not null)
             throw Failure;

@@ -65,7 +65,7 @@ public sealed class UploadVoiceUseCase(
         {
             var voice = Voice.CreatePending(page.Id, VoiceTitle.Create(request.Title), storageKey, contentType, request.SizeBytes);
             await voices.AddAsync(voice, cancellationToken);
-            await unitOfWork.SaveChanges(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return new UploadVoiceResponse(
                 voice.Id.Value,
                 voice.PageId.Value,

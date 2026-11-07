@@ -419,17 +419,28 @@ public sealed class FfmpegAudioPackager(
     {
         var buffer = new char[1024];
         var builder = new StringBuilder();
-        while (builder.Length < maxChars)
+        var overflow = false;
+        while (true)
         {
-            var count = Math.Min(buffer.Length, maxChars - builder.Length);
-            var read = await reader.ReadAsync(buffer.AsMemory(0, count), cancellationToken);
+            var read = await reader.ReadAsync(buffer, cancellationToken);
             if (read == 0)
-                return builder.ToString();
+                break;
+
+            if (overflow)
+                continue;
+
+            var remaining = maxChars - builder.Length;
+            if (read > remaining)
+            {
+                builder.Append(buffer, 0, remaining);
+                overflow = true;
+                continue;
+            }
 
             builder.Append(buffer, 0, read);
         }
 
-        if (reader.Peek() >= 0)
+        if (overflow)
             throw new InvalidDataException("Audio packager output exceeded the limit.");
 
         return builder.ToString();

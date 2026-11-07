@@ -179,7 +179,10 @@ public sealed class RepositoryPersistenceTests(InfrastructureFixture fixture)
         await using (var scope = fixture.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
+            var pages = scope.ServiceProvider.GetRequiredService<IPageRepository>();
             var voices = scope.ServiceProvider.GetRequiredService<IVoiceRepository>();
+            await pages.AddAsync(page);
+            await pages.AddAsync(otherPage);
             await voices.AddAsync(pending);
             await voices.AddAsync(ready);
             await voices.AddAsync(failed);
@@ -223,6 +226,7 @@ public sealed class RepositoryPersistenceTests(InfrastructureFixture fixture)
         await using var scope = fixture.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
         var voices = scope.ServiceProvider.GetRequiredService<IVoiceRepository>();
+        await scope.ServiceProvider.GetRequiredService<IPageRepository>().AddAsync(page);
         await voices.AddAsync(first);
         await voices.AddAsync(second);
         await db.SaveChangesAsync();
@@ -251,28 +255,34 @@ public sealed class RepositoryPersistenceTests(InfrastructureFixture fixture)
         await using (var scope = fixture.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
+            await scope.ServiceProvider.GetRequiredService<IPageRepository>().AddAsync(page);
             await scope.ServiceProvider.GetRequiredService<IVoiceRepository>().AddAsync(original);
             await db.SaveChangesAsync();
         }
 
-        await AssertConflictAsync(duplicateSource, sourceKey);
-        await AssertConflictAsync(duplicatePlaylist, playlistKey);
-        await AssertConflictAsync(duplicatePrefix, segmentPrefix);
+        await AssertConflictAsync(page.Id, duplicateSource, sourceKey);
+        await AssertConflictAsync(page.Id, duplicatePlaylist, playlistKey);
+        await AssertConflictAsync(page.Id, duplicatePrefix, segmentPrefix);
 
         await using var read = fixture.CreateBareContext();
         Assert.Equal(1, await read.Voices.CountAsync(voice => voice.Audio.SourceStorageKey == sourceKey));
     }
 
-    private async Task AssertConflictAsync(Voice duplicate, string secret)
+    private async Task AssertConflictAsync(PageId pageId, Voice duplicate, string secret)
     {
         await using var scope = fixture.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
-        await scope.ServiceProvider.GetRequiredService<IVoiceRepository>().AddAsync(duplicate);
+        var voices = scope.ServiceProvider.GetRequiredService<IVoiceRepository>();
+        await voices.AddAsync(duplicate);
         var exception = await Assert.ThrowsAsync<ConflictException>(() => db.SaveChangesAsync());
 
         Assert.Equal("A unique value is already in use.", exception.Message);
         Assert.Null(exception.InnerException);
         Assert.DoesNotContain(secret, exception.Message, StringComparison.Ordinal);
         Assert.DoesNotContain("23505", exception.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain(db.ChangeTracker.Entries(), entry => entry.State == EntityState.Added);
+
+        await voices.AddAsync(ContentFactory.PendingVoice(pageId));
+        await db.SaveChangesAsync();
     }
 }

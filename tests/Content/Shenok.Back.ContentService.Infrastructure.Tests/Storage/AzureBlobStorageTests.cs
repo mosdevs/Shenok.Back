@@ -82,7 +82,7 @@ public sealed class AzureBlobStorageTests(InfrastructureFixture fixture)
         var binaryKey = $"sources/{Guid.NewGuid():N}";
         var binary = "a\0b"u8.ToArray();
         await using var binaryStream = new MemoryStream(binary);
-        await storage.PutAsync(new BlobUpload(binaryKey, binaryStream, "application/octet-stream", binary.Length), CancellationToken.None);
+        await storage.PutAsync(new BlobUpload(binaryKey, binaryStream, "audio/wav", binary.Length), CancellationToken.None);
         await Assert.ThrowsAsync<InvalidDataException>(() => storage.ReadTextAsync(binaryKey, 10, CancellationToken.None));
         await Assert.ThrowsAsync<InvalidDataException>(() => storage.ReadTextAsync($"sources/{Guid.NewGuid():N}", 10, CancellationToken.None));
     }

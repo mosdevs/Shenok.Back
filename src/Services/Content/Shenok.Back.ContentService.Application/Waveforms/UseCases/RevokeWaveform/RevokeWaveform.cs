@@ -45,7 +45,7 @@ public sealed class RevokeWaveformUseCase(
         }
 
         await mappings.UpdateAsync(mapping, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return new RevokeWaveformResponse(mapping.Id.Value, mapping.Status.ToString());
     }
 

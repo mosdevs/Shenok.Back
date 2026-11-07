@@ -28,7 +28,7 @@ public sealed class ArchivePageUseCase(
         PageAccess.EnsureCanMutate(page, caller);
         page.Archive();
         await pages.UpdateAsync(page, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
     }
 }

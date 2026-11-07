@@ -46,7 +46,7 @@ public sealed class AddVoiceToPageUseCase(
         }
 
         await pages.UpdateAsync(page, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
     }
 }

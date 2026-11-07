@@ -44,7 +44,7 @@ public sealed class PublishPageUseCase(
         }
 
         await pages.UpdateAsync(page, cancellationToken);
-        await unitOfWork.SaveChanges(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return ContentMaps.ToPage(page, loaded);
     }
 }
