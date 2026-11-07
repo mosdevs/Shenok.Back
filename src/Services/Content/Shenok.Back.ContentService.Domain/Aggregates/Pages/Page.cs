@@ -75,12 +75,23 @@ public sealed class Page : AggregateRoot<PageId>
         CoverImageUrl = coverImageUrl;
     }
 
-    public void AddVoiceReference(VoiceId voiceId)
+    /// <summary>
+    /// Appends a voice to the episode order.
+    /// Draft pages may attach <see cref="PackagingStatus.Pending"/> or <see cref="PackagingStatus.Failed"/> voices.
+    /// Published pages may attach only <see cref="PackagingStatus.Ready"/> voices so a live page cannot pick up a non-ready episode.
+    /// The application loads the voice and passes its current packaging status.
+    /// </summary>
+    public void AddVoiceReference(VoiceId voiceId, PackagingStatus packagingStatus)
     {
         EnsureNotArchived();
         ArgumentNullException.ThrowIfNull(voiceId);
+        if (!Enum.IsDefined(packagingStatus))
+            throw new ArgumentOutOfRangeException(nameof(packagingStatus), packagingStatus, "Packaging status is not defined.");
         if (_voiceIds.Contains(voiceId))
             throw new DuplicateVoiceOnPageException(Id, voiceId);
+
+        if (Status is PageStatus.Published && packagingStatus is not PackagingStatus.Ready)
+            throw new VoiceNotReadyForPublishException(voiceId, packagingStatus);
 
         _voiceIds.Add(voiceId);
     }
@@ -104,6 +115,7 @@ public sealed class Page : AggregateRoot<PageId>
     /// <summary>
     /// Publishes a draft when every referenced voice is <see cref="PackagingStatus.Ready"/>.
     /// The application loads the voices and passes their packaging status. A missing entry is not ready.
+    /// Not idempotent: a second call throws <see cref="PageAlreadyPublishedException"/>. Map that to a conflict in the use case.
     /// </summary>
     public void Publish(IReadOnlyDictionary<VoiceId, PackagingStatus> readiness)
     {

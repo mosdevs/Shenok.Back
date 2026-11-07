@@ -45,6 +45,9 @@ public sealed class Voice : AggregateRoot<VoiceId>
             AudioAsset.PendingUpload(sourceStorageKey, sourceContentType, sizeBytes));
     }
 
+    /// <summary>
+    /// The application must load the page and pass its real archived flag. This aggregate does not load <see cref="Page"/>.
+    /// </summary>
     public void UpdateTitle(VoiceTitle title, bool pageIsArchived)
     {
         if (pageIsArchived)
@@ -56,10 +59,19 @@ public sealed class Voice : AggregateRoot<VoiceId>
 
     public void CompletePackagingSuccess(double durationSeconds, string playlistStorageKey, string segmentPrefix)
     {
-        if (!double.IsFinite(durationSeconds) || durationSeconds <= 0)
-            throw new InvalidDurationException();
-
+        EnsureValidDuration(durationSeconds);
         Audio.MarkPackagingReady(playlistStorageKey, segmentPrefix);
+        DurationSeconds = durationSeconds;
+    }
+
+    /// <summary>
+    /// Retry after <see cref="CompletePackagingFailure"/>. First success uses <see cref="CompletePackagingSuccess"/>.
+    /// Ready packaging cannot fail; a later packager fault is out of scope for this aggregate.
+    /// </summary>
+    public void RetryPackagingSuccess(double durationSeconds, string playlistStorageKey, string segmentPrefix)
+    {
+        EnsureValidDuration(durationSeconds);
+        Audio.RetryPackagingReady(playlistStorageKey, segmentPrefix);
         DurationSeconds = durationSeconds;
     }
 
@@ -67,6 +79,12 @@ public sealed class Voice : AggregateRoot<VoiceId>
     {
         Audio.MarkPackagingFailed();
         DurationSeconds = null;
+    }
+
+    private static void EnsureValidDuration(double durationSeconds)
+    {
+        if (!double.IsFinite(durationSeconds) || durationSeconds <= 0)
+            throw new InvalidDurationException();
     }
 
     public void EnsureReadyForPlayback()

@@ -40,6 +40,9 @@ public sealed class WaveformMapping : AggregateRoot<WaveformId>
         Status = WaveformMappingStatus.Active;
     }
 
+    /// <summary>
+    /// The application must load the target page and pass its real archived flag. This aggregate does not load <see cref="Page"/>.
+    /// </summary>
     public static WaveformMapping Register(
         WaveformCode code,
         WaveformTargetType targetType,

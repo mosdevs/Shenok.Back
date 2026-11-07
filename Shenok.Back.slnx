@@ -7,6 +7,7 @@
   <Folder Name="/src/Services/Content/">
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Api/Shenok.Back.ContentService.Api.csproj" Id="3d6194c4-7412-4dc5-925c-2408fa9b3c28" />
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Application/Shenok.Back.ContentService.Application.csproj" Id="cf721847-8497-4d4b-949e-c6195f1c0b9b" />
+    <Project Path="src/Services/Content/Shenok.Back.ContentService.Domain/Shenok.Back.ContentService.Domain.csproj" />
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Infrastructure/Shenok.Back.ContentService.Infrastructure.csproj" Id="d8a3e4be-285d-41ca-8b91-9a5d2f6d4757" />
     <Project Path="src/Services/Content/Shenok.ContentService.Domain/Shenok.ContentService.Domain.csproj" />
   </Folder>
@@ -30,6 +31,10 @@
   </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj" Id="e023aa78-da99-4f3f-84f7-927d6f53e6b0" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/Content/">
+    <Project Path="tests/Content/Shenok.Back.ContentService.Domain.Tests/Shenok.Back.ContentService.Domain.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Identity/">
     <Project Path="tests/Identity/Shenok.Back.IdentityService.Domain.Tests/Shenok.Back.IdentityService.Domain.Tests.csproj" />

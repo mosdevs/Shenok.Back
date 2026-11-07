@@ -10,6 +10,7 @@ public sealed class AudioAsset
 {
     public const int MaxKeyLength = 1024;
     public const int MaxContentTypeLength = 255;
+    public const long MaxSourceSizeBytes = 100L * 1024 * 1024;
 
     public string SourceStorageKey { get; private set; } = string.Empty;
     public string SourceContentType { get; private set; } = string.Empty;
@@ -32,8 +33,10 @@ public sealed class AudioAsset
 
     public static AudioAsset PendingUpload(string sourceStorageKey, string sourceContentType, long sizeBytes)
     {
-        if (sizeBytes < 0)
-            throw new InvalidAudioAssetException("Size cannot be negative.");
+        if (sizeBytes <= 0)
+            throw new InvalidAudioAssetException("Size must be greater than zero.");
+        if (sizeBytes > MaxSourceSizeBytes)
+            throw new InvalidAudioAssetException($"Size cannot exceed {MaxSourceSizeBytes} bytes.");
 
         return new AudioAsset(
             RequireKey(sourceStorageKey, "Source storage key"),
@@ -41,16 +44,27 @@ public sealed class AudioAsset
             sizeBytes);
     }
 
+    /// <summary>
+    /// First successful package. Allowed only from Pending.
+    /// Retry a failed package with <see cref="RetryPackagingReady"/>. Ready cannot fail or be packaged again.
+    /// </summary>
     public void MarkPackagingReady(string playlistStorageKey, string segmentPrefix)
     {
-        if (PackagingStatus == PackagingState.Ready)
+        if (PackagingStatus != PackagingState.Pending)
             throw new InvalidPackagingTransitionException(PackagingStatus, PackagingState.Ready);
 
-        var playlist = RequireKey(playlistStorageKey, "Playlist storage key");
-        var prefix = RequireKey(segmentPrefix, "Segment prefix");
-        PlaylistStorageKey = playlist;
-        SegmentPrefix = prefix;
-        PackagingStatus = PackagingState.Ready;
+        BecomeReady(playlistStorageKey, segmentPrefix);
+    }
+
+    /// <summary>
+    /// Retry after <see cref="MarkPackagingFailed"/>. Allowed only from Failed.
+    /// </summary>
+    public void RetryPackagingReady(string playlistStorageKey, string segmentPrefix)
+    {
+        if (PackagingStatus != PackagingState.Failed)
+            throw new InvalidPackagingTransitionException(PackagingStatus, PackagingState.Ready);
+
+        BecomeReady(playlistStorageKey, segmentPrefix);
     }
 
     public void MarkPackagingFailed()
@@ -61,6 +75,15 @@ public sealed class AudioAsset
         PackagingStatus = PackagingState.Failed;
         PlaylistStorageKey = null;
         SegmentPrefix = null;
+    }
+
+    private void BecomeReady(string playlistStorageKey, string segmentPrefix)
+    {
+        var playlist = RequireKey(playlistStorageKey, "Playlist storage key");
+        var prefix = RequireKey(segmentPrefix, "Segment prefix");
+        PlaylistStorageKey = playlist;
+        SegmentPrefix = prefix;
+        PackagingStatus = PackagingState.Ready;
     }
 
     private static string RequireKey(string value, string name)
