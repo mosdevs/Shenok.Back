@@ -1,11 +1,160 @@
 {
   "version": 4,
   "targets": {
-    "net10.0": {}
+    "net10.0": {
+      "FluentValidation/12.1.1": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/FluentValidation.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/FluentValidation.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.11": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Shenok.Back.Application.Abstractions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.11"
+        },
+        "compile": {
+          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
+        }
+      },
+      "Shenok.Back.ContentService.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Shenok.Back.SharedKernel": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Shenok.Back.ContentService.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.ContentService.Domain.dll": {}
+        }
+      },
+      "Shenok.Back.SharedKernel/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Shenok.Back.SharedKernel.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.SharedKernel.dll": {}
+        }
+      },
+      "Shenok.Back.WaveformCodec/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Shenok.Back.WaveformCodec.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.WaveformCodec.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "FluentValidation/12.1.1": {
+      "sha512": "EPpkIe1yh1a0OXyC100oOA8WMbZvqUu5plwhvYcb7oSELfyUZzfxV48BLhvs3kKo4NwG7MGLNgy1RJiYtT8Dpw==",
+      "type": "package",
+      "path": "fluentvalidation/12.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "fluent-validation-icon.png",
+        "fluentvalidation.12.1.1.nupkg.sha512",
+        "fluentvalidation.nuspec",
+        "lib/net8.0/FluentValidation.dll",
+        "lib/net8.0/FluentValidation.xml"
+      ]
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.11": {
+      "sha512": "/a1aJz4m7ylhEDf25ugQChLQoN5XwoGjWw/BoR/ZWWKsO1v4DdJElS1uyngahz4B/eOzjFk1KNTkarRLE5wsIg==",
+      "type": "package",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/10.0.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "microsoft.extensions.dependencyinjection.abstractions.10.0.11.nupkg.sha512",
+        "microsoft.extensions.dependencyinjection.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Shenok.Back.Application.Abstractions/1.0.0": {
+      "type": "project",
+      "path": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj",
+      "msbuildProject": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj"
+    },
+    "Shenok.Back.ContentService.Domain/1.0.0": {
+      "type": "project",
+      "path": "../Shenok.Back.ContentService.Domain/Shenok.Back.ContentService.Domain.csproj",
+      "msbuildProject": "../Shenok.Back.ContentService.Domain/Shenok.Back.ContentService.Domain.csproj"
+    },
+    "Shenok.Back.SharedKernel/1.0.0": {
+      "type": "project",
+      "path": "../../../Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj",
+      "msbuildProject": "../../../Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj"
+    },
+    "Shenok.Back.WaveformCodec/1.0.0": {
+      "type": "project",
+      "path": "../../../Shared/Shenok.Back.WaveformCodec/Shenok.Back.WaveformCodec.csproj",
+      "msbuildProject": "../../../Shared/Shenok.Back.WaveformCodec/Shenok.Back.WaveformCodec.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net10.0": []
+    "net10.0": [
+      "FluentValidation >= 12.1.1",
+      "Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.11",
+      "Shenok.Back.Application.Abstractions >= 1.0.0",
+      "Shenok.Back.ContentService.Domain >= 1.0.0",
+      "Shenok.Back.WaveformCodec >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\Rivas\\.nuget\\packages\\": {},
@@ -40,7 +189,17 @@
         "net10.0": {
           "framework": "net10.0",
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
+              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
+            },
+            "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
+              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
+            },
+            "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
+              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
@@ -59,6 +218,16 @@
       "net10.0": {
         "framework": "net10.0",
         "targetAlias": "net10.0",
+        "dependencies": {
+          "FluentValidation": {
+            "target": "Package",
+            "version": "[12.1.1, )"
+          },
+          "Microsoft.Extensions.DependencyInjection.Abstractions": {
+            "target": "Package",
+            "version": "[10.0.11, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",

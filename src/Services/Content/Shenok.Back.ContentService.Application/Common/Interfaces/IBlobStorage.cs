@@ -1,0 +1,19 @@
+namespace Shenok.Back.ContentService.Application.Common.Interfaces;
+
+public sealed record BlobUpload(string StorageKey, Stream Content, string ContentType, long SizeBytes);
+
+public interface IBlobStorage
+{
+    /// <summary>
+    /// Stores a private object. Reads at most <see cref="BlobUpload.SizeBytes"/> and fails when the stream is shorter.
+    /// The key is chosen by the application and must be stored unchanged.
+    /// </summary>
+    Task PutAsync(BlobUpload upload, CancellationToken cancellationToken);
+
+    Task DeleteAsync(string storageKey, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Reads a UTF-8 object. Fails when the object is larger than <paramref name="maxChars"/>.
+    /// </summary>
+    Task<string> ReadTextAsync(string storageKey, int maxChars, CancellationToken cancellationToken);
+}

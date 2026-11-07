@@ -7,20 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Interfaces\" />
-    <Folder Include="Pages\UseCases\CreatePage\" />
-    <Folder Include="Pages\UseCases\ArchivePage\" />
-    <Folder Include="Pages\UseCases\GetPageById\" />
-    <Folder Include="Pages\UseCases\GetPageWithVoices\" />
-    <Folder Include="Pages\UseCases\PublishPage\" />
-    <Folder Include="Voices\UseCases\AddVoice\" />
-    <Folder Include="Voices\UseCases\GetVoiceById\" />
-    <Folder Include="Voices\UseCases\GetVoiceStreamUrl\" />
-    <Folder Include="Voices\UseCases\ReorderVoices\" />
-    <Folder Include="Voices\UseCases\UpdateVoiceMetadata\" />
-    <Folder Include="Waveforms\UseCases\GetWaveformMapping\" />
-    <Folder Include="Waveforms\UseCases\RevokeWaveform\" />
-    <Folder Include="Waveforms\UseCases\RegisterWaveform\" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.Application.Abstractions\Shenok.Back.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.WaveformCodec\Shenok.Back.WaveformCodec.csproj" />
+    <ProjectReference Include="..\Shenok.Back.ContentService.Domain\Shenok.Back.ContentService.Domain.csproj" />
   </ItemGroup>
 
 </Project>
