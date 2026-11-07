@@ -11,12 +11,19 @@ public sealed class PackagingOptions
     public int PollSeconds { get; set; } = 5;
     public int BatchSize { get; set; } = 8;
 
+    /// <summary>
+    /// Voices from one poll that may be encoded at the same time.
+    /// One is the default. Two is the maximum, because FFmpeg shares this process with the API.
+    /// </summary>
+    public int Parallelism { get; set; } = 1;
+
     public static bool IsValid(PackagingOptions options) =>
         IsToolPath(options.FfmpegPath)
         && IsToolPath(options.FfprobePath)
         && options.ProcessTimeoutSeconds is >= 30 and <= 3600
         && options.PollSeconds is >= 1 and <= 60
-        && options.BatchSize is >= 1 and <= 8;
+        && options.BatchSize is >= 1 and <= 8
+        && options.Parallelism is >= 1 and <= 2;
 
     private static bool IsToolPath(string path)
     {

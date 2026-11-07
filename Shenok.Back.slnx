@@ -9,7 +9,6 @@
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Application/Shenok.Back.ContentService.Application.csproj" Id="cf721847-8497-4d4b-949e-c6195f1c0b9b" />
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Domain/Shenok.Back.ContentService.Domain.csproj" />
     <Project Path="src/Services/Content/Shenok.Back.ContentService.Infrastructure/Shenok.Back.ContentService.Infrastructure.csproj" Id="d8a3e4be-285d-41ca-8b91-9a5d2f6d4757" />
-    <Project Path="src/Services/Content/Shenok.ContentService.Domain/Shenok.ContentService.Domain.csproj" />
   </Folder>
   <Folder Name="/src/Services/Engagement/">
     <Project Path="src/Services/Engagement/Shenok.Back.EngagementService.Api/Shenok.Back.EngagementService.Api.csproj" Id="f5cac29a-ddc9-4fdf-9ac2-17ea2d9d1fdd" />
@@ -34,6 +33,7 @@
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/Content/">
+    <Project Path="tests/Content/Shenok.Back.ContentService.Api.Tests/Shenok.Back.ContentService.Api.Tests.csproj" />
     <Project Path="tests/Content/Shenok.Back.ContentService.Application.Tests/Shenok.Back.ContentService.Application.Tests.csproj" />
     <Project Path="tests/Content/Shenok.Back.ContentService.Domain.Tests/Shenok.Back.ContentService.Domain.Tests.csproj" />
     <Project Path="tests/Content/Shenok.Back.ContentService.Infrastructure.Tests/Shenok.Back.ContentService.Infrastructure.Tests.csproj" />

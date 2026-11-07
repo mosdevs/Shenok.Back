@@ -58,7 +58,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public async Task Disabled_worker_starts_without_opening_postgres_or_blob_storage()
+    public async Task Disabled_packaging_starts_without_opening_postgres_or_blob_storage()
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>

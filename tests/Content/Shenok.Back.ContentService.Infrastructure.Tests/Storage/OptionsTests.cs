@@ -83,6 +83,14 @@ public sealed class OptionsTests
         Assert.False(PackagingOptions.IsValid(options));
         options.BatchSize = 8;
         Assert.True(PackagingOptions.IsValid(options));
+
+        options = ValidPackaging();
+        options.Parallelism = 0;
+        Assert.False(PackagingOptions.IsValid(options));
+        options.Parallelism = 3;
+        Assert.False(PackagingOptions.IsValid(options));
+        options.Parallelism = 2;
+        Assert.True(PackagingOptions.IsValid(options));
     }
 
     [Fact]

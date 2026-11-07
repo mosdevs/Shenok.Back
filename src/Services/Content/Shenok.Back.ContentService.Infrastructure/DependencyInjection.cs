@@ -50,8 +50,16 @@ public static class DependencyInjection
         services.AddSingleton<AzureBlobStorage>();
         services.AddSingleton<IBlobStorage>(provider => provider.GetRequiredService<AzureBlobStorage>());
         services.AddSingleton<IAudioPackager, FfmpegAudioPackager>();
-        services.AddHostedService<VoicePackagingWorker>();
+        if (IsPackagingEnabled(configuration))
+            services.AddContentPackagingActor();
 
         return services;
+    }
+
+    private static bool IsPackagingEnabled(IConfiguration configuration)
+    {
+        var packaging = configuration.GetSection(PackagingOptions.SectionName).Get<PackagingOptions>()
+            ?? new PackagingOptions();
+        return packaging.Enabled;
     }
 }

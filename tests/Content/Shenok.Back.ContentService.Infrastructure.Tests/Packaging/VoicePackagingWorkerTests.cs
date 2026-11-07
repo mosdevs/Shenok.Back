@@ -5,8 +5,12 @@ using Shenok.Back.ContentService.Infrastructure.Persistence;
 
 namespace Shenok.Back.ContentService.Infrastructure.Tests.Packaging;
 
+/// <summary>
+/// The host starts VoicePackagingCoordinator when packaging is enabled.
+/// A missing source fails only that pending voice.
+/// </summary>
 [Collection(InfrastructureFixture.Name)]
-public sealed class VoicePackagingWorkerTests(InfrastructureFixture fixture)
+public sealed class VoicePackagingCoordinatorTests(InfrastructureFixture fixture)
 {
     [Fact]
     public async Task Worker_fails_only_the_pending_voice_when_its_source_is_missing()

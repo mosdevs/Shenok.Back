@@ -1,6 +1,168 @@
 @Shenok.Back.ContentService.Api_HostAddress = http://localhost:5117
+@InternalKey = dev-internal-key
+@UserId = 11111111-1111-1111-1111-111111111111
+@PageId = 22222222-2222-2222-2222-222222222222
+@VoiceId = 33333333-3333-3333-3333-333333333333
+@WaveformId = 44444444-4444-4444-4444-444444444444
 
-GET {{Shenok.Back.ContentService.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Health does not require the internal key.
+GET {{Shenok.Back.ContentService.Api_HostAddress}}/health
 
 ###
+
+# @name createPage
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/pages
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+Content-Type: application/json
+
+{
+  "title": "Night Walks",
+  "description": "A quiet show.",
+  "coverImageUrl": null
+}
+
+###
+
+GET {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+
+###
+
+PUT {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+Content-Type: application/json
+
+{
+  "title": "Night Walks",
+  "description": "Revised.",
+  "coverImageUrl": null
+}
+
+###
+
+# Multipart upload. file is the audio part; title is a form field. The storage key is assigned by the server.
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}/voices
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+Content-Type: multipart/form-data; boundary=ShenokVoice
+
+--ShenokVoice
+Content-Disposition: form-data; name="title"
+
+Episode 1
+--ShenokVoice
+Content-Disposition: form-data; name="file"; filename="episode.mp3"
+Content-Type: audio/mpeg
+
+< ./episode.mp3
+--ShenokVoice--
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}/voices/{{VoiceId}}
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+
+###
+
+PUT {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}/voices/order
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+Content-Type: application/json
+
+{
+  "voiceIds": [ "{{VoiceId}}" ]
+}
+
+###
+
+PUT {{Shenok.Back.ContentService.Api_HostAddress}}/voices/{{VoiceId}}
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+Content-Type: application/json
+
+{
+  "title": "Episode 1"
+}
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}/publish
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/pages/{{PageId}}/archive
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: Admin
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/waveforms
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+Content-Type: application/json
+
+{
+  "targetType": "Page",
+  "targetId": "{{PageId}}"
+}
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/waveforms/{{WaveformId}}/revoke
+X-Internal-Key: {{InternalKey}}
+X-User-Id: {{UserId}}
+X-User-Roles: ContentCreator
+
+###
+
+GET {{Shenok.Back.ContentService.Api_HostAddress}}/internal/pages/{{PageId}}
+X-Internal-Key: {{InternalKey}}
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/internal/playback
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "voiceId": "{{VoiceId}}",
+  "waveformId": "{{WaveformId}}"
+}
+
+###
+
+# Phase 2 accepts the command and answers 501. The counter row is not changed.
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/internal/pages/{{PageId}}/subscribers
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "delta": 1,
+  "idempotencyKey": "follow:scan-1"
+}
+
+###
+
+POST {{Shenok.Back.ContentService.Api_HostAddress}}/internal/voices/{{VoiceId}}/plays
+X-Internal-Key: {{InternalKey}}
+Content-Type: application/json
+
+{
+  "playSessionId": "55555555-5555-5555-5555-555555555555"
+}
