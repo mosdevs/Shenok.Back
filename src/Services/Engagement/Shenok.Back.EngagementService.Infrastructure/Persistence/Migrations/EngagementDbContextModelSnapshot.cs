@@ -53,7 +53,10 @@ namespace Shenok.Back.EngagementService.Infrastructure.Persistence.Migrations
                     b.HasKey("UserId", "VoiceId")
                         .HasName("pk_listening_records");
 
-                    b.ToTable("listening_records", (string)null);
+                    b.ToTable("listening_records", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_listening_records_position_non_negative", "position >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Shenok.Back.EngagementService.Domain.Aggregates.PlaySessions.PlaySession", b =>
@@ -133,7 +136,10 @@ namespace Shenok.Back.EngagementService.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_scan_receipts");
 
-                    b.ToTable("scan_receipts", (string)null);
+                    b.ToTable("scan_receipts", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_scan_receipts_resume_position_non_negative", "resume_position >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships.UserPageRelationship", b =>

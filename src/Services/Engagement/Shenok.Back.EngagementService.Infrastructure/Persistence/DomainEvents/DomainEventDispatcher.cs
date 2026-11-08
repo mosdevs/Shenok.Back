@@ -41,10 +41,28 @@ public sealed class DomainEventDispatcher(IServiceScopeFactory scopeFactory, ILo
         }
     }
 
-    private static async Task InvokeAsync<TEvent>(IServiceProvider provider, TEvent domainEvent, CancellationToken ct)
+    private async Task InvokeAsync<TEvent>(IServiceProvider provider, TEvent domainEvent, CancellationToken ct)
         where TEvent : IDomainEvent
     {
         foreach (var handler in provider.GetServices<IDomainEventHandler<TEvent>>())
-            await handler.HandleAsync(domainEvent, ct);
+        {
+            try
+            {
+                await handler.HandleAsync(domainEvent, ct);
+            }
+            catch (Exception exception) when (!IsCancellation(exception, ct))
+            {
+                // The row is already committed, and this phase has no outbox to retry the event.
+                // A handler failure must not turn that commit into a failed request.
+                logger.LogError(
+                    exception,
+                    "Domain handler {Handler} failed for event {EventId} after the row was committed.",
+                    handler.GetType().Name,
+                    domainEvent.EventId);
+            }
+        }
     }
+
+    private static bool IsCancellation(Exception exception, CancellationToken ct) =>
+        exception is OperationCanceledException && ct.IsCancellationRequested;
 }

@@ -87,6 +87,14 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         services.AddSingleton(Events);
         services.AddSingleton<IDomainEventHandler<PageUnlockedDomainEvent>>(
             provider => provider.GetRequiredService<RecordingHandler>());
+        services.AddSingleton<IDomainEventHandler<PageFollowedDomainEvent>>(
+            provider => provider.GetRequiredService<RecordingHandler>());
+        services.AddSingleton<IDomainEventHandler<PageUnfollowedDomainEvent>>(
+            provider => provider.GetRequiredService<RecordingHandler>());
+        services.AddSingleton<IDomainEventHandler<VoicePlayedDomainEvent>>(
+            provider => provider.GetRequiredService<RecordingHandler>());
+        services.AddSingleton<IDomainEventHandler<VoiceCompletedDomainEvent>>(
+            provider => provider.GetRequiredService<RecordingHandler>());
         services.AddEngagementApplication(configuration);
         services.AddEngagementInfrastructure(configuration);
         return services.BuildServiceProvider(validateScopes: true);

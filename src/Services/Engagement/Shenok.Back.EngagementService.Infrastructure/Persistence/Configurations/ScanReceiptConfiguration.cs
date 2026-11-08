@@ -10,10 +10,13 @@ public sealed class ScanReceiptConfiguration : IEntityTypeConfiguration<ScanRece
 {
     public const string TableName = "scan_receipts";
     public const string PrimaryKeyName = "pk_scan_receipts";
+    public const string ResumePositionCheckName = "ck_scan_receipts_resume_position_non_negative";
 
     public void Configure(EntityTypeBuilder<ScanReceipt> builder)
     {
-        builder.ToTable(TableName);
+        // The stored resume position is a PlaybackPosition. The check stops a direct insert of a negative second count.
+        builder.ToTable(TableName, table =>
+            table.HasCheckConstraint(ResumePositionCheckName, "resume_position >= 0"));
         builder.Ignore(receipt => receipt.DomainEvents);
         builder.HasKey(receipt => receipt.Id)
             .HasName(PrimaryKeyName);

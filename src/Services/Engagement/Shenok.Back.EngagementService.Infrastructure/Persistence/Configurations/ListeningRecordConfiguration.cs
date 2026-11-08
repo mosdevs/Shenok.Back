@@ -9,10 +9,13 @@ public sealed class ListeningRecordConfiguration : IEntityTypeConfiguration<List
 {
     public const string TableName = "listening_records";
     public const string PrimaryKeyName = "pk_listening_records";
+    public const string PositionCheckName = "ck_listening_records_position_non_negative";
 
     public void Configure(EntityTypeBuilder<ListeningRecord> builder)
     {
-        builder.ToTable(TableName);
+        // PlaybackPosition.From rejects a negative value. The check stops a direct insert from storing one.
+        builder.ToTable(TableName, table =>
+            table.HasCheckConstraint(PositionCheckName, "position >= 0"));
         builder.Ignore(record => record.Id);
         builder.Ignore(record => record.DomainEvents);
         builder.HasKey(record => new { record.UserId, record.VoiceId })
