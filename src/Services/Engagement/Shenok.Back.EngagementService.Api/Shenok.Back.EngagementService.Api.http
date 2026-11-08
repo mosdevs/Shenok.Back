@@ -1,6 +1,6 @@
 @Shenok.Back.EngagementService.Api_HostAddress = http://localhost:5217
 
-GET {{Shenok.Back.EngagementService.Api_HostAddress}}/weatherforecast/
+GET {{Shenok.Back.EngagementService.Api_HostAddress}}/health
 Accept: application/json
 
 ###

@@ -6,4 +6,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Shenok.Back.EngagementService.Api.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.Api.Shared\Shenok.Back.Api.Shared.csproj" />
+    <ProjectReference Include="..\Shenok.Back.EngagementService.Application\Shenok.Back.EngagementService.Application.csproj" />
+    <ProjectReference Include="..\Shenok.Back.EngagementService.Infrastructure\Shenok.Back.EngagementService.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.11" />
+  </ItemGroup>
+
 </Project>
