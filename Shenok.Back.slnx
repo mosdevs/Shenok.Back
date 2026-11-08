@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".gitignore.txt" />
+    <File Path="something.txt" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/Services/" />
