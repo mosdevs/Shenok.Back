@@ -42,6 +42,7 @@
   <Folder Name="/tests/Engagement/">
     <Project Path="tests/Engagement/Shenok.Back.EngagementService.Application.Tests/Shenok.Back.EngagementService.Application.Tests.csproj" />
     <Project Path="tests/Engagement/Shenok.Back.EngagementService.Domain.Tests/Shenok.Back.EngagementService.Domain.Tests.csproj" />
+    <Project Path="tests/Engagement/Shenok.Back.EngagementService.Infrastructure.Tests/Shenok.Back.EngagementService.Infrastructure.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Identity/">
     <Project Path="tests/Identity/Shenok.Back.IdentityService.Domain.Tests/Shenok.Back.IdentityService.Domain.Tests.csproj" />
