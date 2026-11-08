@@ -31,6 +31,19 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
+      "Shenok.Back.Application.Abstractions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.11"
+        },
+        "compile": {
+          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
+        }
+      },
       "Shenok.Back.ContentService.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -52,6 +65,16 @@
         },
         "runtime": {
           "bin/placeholder/Shenok.Back.SharedKernel.dll": {}
+        }
+      },
+      "Shenok.Back.WaveformCodec/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Shenok.Back.WaveformCodec.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.WaveformCodec.dll": {}
         }
       }
     }
@@ -103,6 +126,11 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Shenok.Back.Application.Abstractions/1.0.0": {
+      "type": "project",
+      "path": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj",
+      "msbuildProject": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj"
+    },
     "Shenok.Back.ContentService.Domain/1.0.0": {
       "type": "project",
       "path": "../Shenok.Back.ContentService.Domain/Shenok.Back.ContentService.Domain.csproj",
@@ -112,29 +140,34 @@
       "type": "project",
       "path": "../../../Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj",
       "msbuildProject": "../../../Shared/Shenok.Back.SharedKernel/Shenok.Back.SharedKernel.csproj"
+    },
+    "Shenok.Back.WaveformCodec/1.0.0": {
+      "type": "project",
+      "path": "../../../Shared/Shenok.Back.WaveformCodec/Shenok.Back.WaveformCodec.csproj",
+      "msbuildProject": "../../../Shared/Shenok.Back.WaveformCodec/Shenok.Back.WaveformCodec.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
-      "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
       "FluentValidation >= 12.1.1",
       "Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.11",
-      "Shenok.Back.ContentService.Domain >= 1.0.0"
+      "Shenok.Back.Application.Abstractions >= 1.0.0",
+      "Shenok.Back.ContentService.Domain >= 1.0.0",
+      "Shenok.Back.WaveformCodec >= 1.0.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\mosta\\.nuget\\packages\\": {},
+    "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\8069a69a6768108798ef66a88dbf4abb\\nuget": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
+      "projectUniqueName": "d:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
       "projectName": "Shenok.Back.ContentService.Application",
-      "projectPath": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
-      "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
-      "outputPath": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\obj\\",
+      "projectPath": "d:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
+      "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\8069a69a6768108798ef66a88dbf4abb\\nuget",
+      "outputPath": "d:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -156,14 +189,14 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
-              "projectPath": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
+            "d:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
+              "projectPath": "d:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
             },
-            "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
-              "projectPath": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
+            "d:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
+              "projectPath": "d:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
             },
-            "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
-              "projectPath": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj"
+            "d:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
+              "projectPath": "d:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj"
             }
           }
         }
@@ -486,25 +519,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1105",
-      "level": "Error",
-      "message": "Unable to find project information for 'D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj'. If you are using Visual Studio, this may be because the project is unloaded or not part of the current solution so run a restore from the command-line. Otherwise, the project file may be invalid or missing targets required for restore.",
-      "libraryId": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1105",
-      "level": "Error",
-      "message": "Unable to find project information for 'D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj'. If you are using Visual Studio, this may be because the project is unloaded or not part of the current solution so run a restore from the command-line. Otherwise, the project file may be invalid or missing targets required for restore.",
-      "libraryId": "D:\\Kaaashi\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }

@@ -1,3 +1,4 @@
+using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.EngagementService.Application.Common;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
 
@@ -90,7 +91,7 @@ public class FollowTests
         harness.Memory.BeforeConflict = () =>
             harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.UserPageRelationship);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exception = await Assert.ThrowsAsync<UnavailableException>(() =>
             harness.Follow().ExecuteAsync(harness.FollowRequest(), CancellationToken.None));
 
         Assert.Equal("The follow could not be saved.", exception.Message);
@@ -113,7 +114,7 @@ public class FollowTests
             harness.Memory.Failure = new EngagementConcurrencyException();
         };
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exception = await Assert.ThrowsAsync<UnavailableException>(() =>
             harness.Unfollow().ExecuteAsync(harness.UnfollowRequest(), CancellationToken.None));
 
         Assert.Equal("The unfollow could not be saved.", exception.Message);

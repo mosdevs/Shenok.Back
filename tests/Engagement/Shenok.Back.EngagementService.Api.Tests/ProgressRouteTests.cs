@@ -25,7 +25,7 @@ public sealed class ProgressRouteTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
         Assert.True(body.GetProperty("errors").TryGetProperty("PositionSeconds", out _));
         Assert.NotEqual("https://shenok.dev/problems/server", body.GetProperty("type").GetString());
     }
@@ -80,7 +80,7 @@ public sealed class ProgressRouteTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var problem = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(problem, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
+        ApiJson.AssertProblem(response, problem, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
         Assert.Equal(EngagementConflict.PlaySessionBelongsToAnotherListener, problem.GetProperty("detail").GetString());
         Assert.False(problem.TryGetProperty("positionSeconds", out _));
 
@@ -90,6 +90,35 @@ public sealed class ProgressRouteTests(EngagementApiFixture api)
         Assert.False(voice.GetProperty("isCompleted").GetBoolean());
 
         Assert.Equal(8, await PositionAsync(owner, voiceId));
+    }
+
+    [Fact]
+    public async Task Body_user_id_does_not_replace_the_header()
+    {
+        var headerUser = Guid.NewGuid();
+        var bodyUser = Guid.NewGuid();
+        var voiceId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid().ToString("N");
+        var body = new
+        {
+            userId = bodyUser,
+            voiceId,
+            playSessionId = sessionId,
+            positionSeconds = 9,
+            completed = false,
+            isSeek = false
+        };
+
+        var stored = await api.SendAsync(HttpMethod.Post, "/internal/progress", body, userId: headerUser);
+        Assert.Equal(HttpStatusCode.OK, stored.StatusCode);
+
+        var asBodyUser = await api.SendAsync(HttpMethod.Post, "/internal/progress", body, userId: bodyUser);
+        Assert.Equal(HttpStatusCode.Conflict, asBodyUser.StatusCode);
+        var problem = await ApiJson.ReadAsync(asBodyUser);
+        ApiJson.AssertProblem(asBodyUser, problem, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
+
+        Assert.Equal(9, await PositionAsync(headerUser, voiceId));
+        Assert.Equal(0, await PositionAsync(bodyUser, voiceId));
     }
 
     private async Task ReportAsync(

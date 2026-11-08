@@ -64,7 +64,7 @@ public sealed class FollowRouteTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
         Assert.True(body.GetProperty("errors").TryGetProperty("PageId", out _));
     }
 

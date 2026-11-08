@@ -120,7 +120,7 @@ public sealed class ListeningRouteTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
         var messages = body.GetProperty("errors").GetProperty("VoiceIds").EnumerateArray().Select(item => item.GetString());
         Assert.Contains(EngagementLimits.TooManyVoicesMessage, messages);
     }

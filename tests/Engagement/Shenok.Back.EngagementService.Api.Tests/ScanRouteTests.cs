@@ -72,7 +72,7 @@ public sealed class ScanRouteTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
         Assert.Equal(EngagementConflict.ScanBelongsToAnotherUser, body.GetProperty("detail").GetString());
         Assert.False(body.TryGetProperty("unlocked", out _));
         Assert.False(body.TryGetProperty("isFollowing", out _));
@@ -124,7 +124,7 @@ public sealed class ScanRouteTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
         Assert.True(body.GetProperty("errors").TryGetProperty("PageId", out _));
         Assert.NotEqual("https://shenok.dev/problems/server", body.GetProperty("type").GetString());
     }
@@ -157,6 +157,31 @@ public sealed class ScanRouteTests(EngagementApiFixture api)
             userId: userId);
         Assert.Equal(HttpStatusCode.OK, playback.StatusCode);
         Assert.False((await ApiJson.ReadAsync(playback)).GetProperty("canPlay").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Scan_id_longer_than_64_characters_is_validation_400()
+    {
+        var response = await api.SendAsync(
+            HttpMethod.Post,
+            "/internal/scans",
+            new
+            {
+                scanId = new string('a', 65),
+                waveformId = Guid.NewGuid(),
+                voiceId = Guid.NewGuid(),
+                pageId = Guid.NewGuid()
+            },
+            userId: Guid.NewGuid(),
+            correlationId: "corr-long-scan");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("corr-long-scan", response.Headers.GetValues("X-Correlation-Id").Single());
+        var body = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        Assert.Equal("corr-long-scan", body.GetProperty("traceId").GetString());
+        Assert.True(body.GetProperty("errors").TryGetProperty("ScanId", out _));
+        Assert.NotEqual("https://shenok.dev/problems/domain", body.GetProperty("type").GetString());
     }
 
     private static string NewToken() => Guid.NewGuid().ToString("N");

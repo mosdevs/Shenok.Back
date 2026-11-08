@@ -19,3 +19,12 @@ public sealed class UnauthorizedException : Exception
 {
     public UnauthorizedException(string message) : base(message) { }
 }
+
+/// <summary>
+/// The work was valid and could not be saved after the allowed retries.
+/// Mapped to HTTP 503. The message is a stable client detail, not an internal exception.
+/// </summary>
+public sealed class UnavailableException : Exception
+{
+    public UnavailableException(string message) : base(message) { }
+}

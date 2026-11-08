@@ -1,5 +1,6 @@
 using FluentValidation;
 using Shenok.Back.Application.Abstractions;
+using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.EngagementService.Application.Common;
 using Shenok.Back.EngagementService.Application.Common.Interfaces;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
@@ -69,6 +70,6 @@ public sealed class FollowPageUseCase(
             }
         }
 
-        throw new InvalidOperationException("The follow could not be saved.");
+        throw new UnavailableException("The follow could not be saved.");
     }
 }

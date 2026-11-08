@@ -211,7 +211,7 @@ public class RegisterScanTests
         harness.Memory.BeforeConflict = () =>
             harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.UserPageRelationship);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exception = await Assert.ThrowsAsync<UnavailableException>(() =>
             harness.RegisterScan().ExecuteAsync(harness.Scan(), CancellationToken.None));
 
         Assert.Equal("The scan could not be stored.", exception.Message);

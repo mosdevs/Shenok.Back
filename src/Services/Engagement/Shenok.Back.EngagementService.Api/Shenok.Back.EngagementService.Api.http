@@ -4,3 +4,8 @@ GET {{Shenok.Back.EngagementService.Api_HostAddress}}/health
 Accept: application/json
 
 ###
+
+GET {{Shenok.Back.EngagementService.Api_HostAddress}}/ready
+Accept: application/json
+
+###

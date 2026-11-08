@@ -50,22 +50,6 @@ internal static class UseCaseHttp
         if (result.IsValid)
             return null;
 
-        var errors = result.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => string.IsNullOrEmpty(group.Key) ? "_" : group.Key,
-                group => group.Select(error => error.ErrorMessage).Distinct().ToArray());
-
-        return new ObjectResult(new ApiProblem(
-            "https://shenok.dev/problems/validation",
-            "Validation failed",
-            StatusCodes.Status400BadRequest,
-            "One or more fields are invalid.",
-            http.TraceIdentifier,
-            errors))
-        {
-            StatusCode = StatusCodes.Status400BadRequest,
-            ContentTypes = { "application/problem+json" }
-        };
+        return ApiProblems.Result(ApiProblems.Validation(http.TraceIdentifier, ApiProblems.Group(result.Errors)));
     }
 }

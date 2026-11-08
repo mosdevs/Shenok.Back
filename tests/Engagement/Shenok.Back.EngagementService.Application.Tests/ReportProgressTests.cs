@@ -204,7 +204,7 @@ public class ReportProgressTests
         harness.Memory.Failure = new EngagementConcurrencyException();
         harness.Memory.BeforeConflict = () => harness.Memory.Failure = new EngagementConcurrencyException();
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exception = await Assert.ThrowsAsync<UnavailableException>(() =>
             harness.ReportProgress().ExecuteAsync(harness.Progress("play-1", 15), CancellationToken.None));
 
         Assert.Equal("Listening progress could not be saved.", exception.Message);

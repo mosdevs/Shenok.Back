@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shenok.Back.Application.Abstractions.Exceptions;
@@ -8,8 +7,6 @@ namespace Shenok.Back.Api.Shared.Errors;
 
 public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -30,17 +27,17 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         else
             logger.LogInformation(exception, "Request failed with {Status}", status);
 
-        var problem = new ApiProblem(
+        var detail = status >= StatusCodes.Status500InternalServerError && exception is not UnavailableException
+            ? ApiProblems.ServerDetail
+            : exception.Message;
+
+        await ApiProblems.WriteAsync(context, new ApiProblem(
             type,
             title,
             status,
-            exception.Message,
+            detail,
             context.TraceIdentifier,
-            null);
-
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problem, JsonOptions));
+            null));
     }
 
     private static (int Status, string Title, string Type) Map(Exception exception) => exception switch
@@ -50,6 +47,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         NotFoundException => (StatusCodes.Status404NotFound, "Not Found", "https://shenok.dev/problems/not-found"),
         ConflictException => (StatusCodes.Status409Conflict, "Conflict", "https://shenok.dev/problems/conflict"),
         DomainException => (StatusCodes.Status400BadRequest, "Domain rule violated", "https://shenok.dev/problems/domain"),
+        UnavailableException => (StatusCodes.Status503ServiceUnavailable, "Service Unavailable", "https://shenok.dev/problems/unavailable"),
         _ => (StatusCodes.Status500InternalServerError, "Server error", "https://shenok.dev/problems/server")
     };
 }

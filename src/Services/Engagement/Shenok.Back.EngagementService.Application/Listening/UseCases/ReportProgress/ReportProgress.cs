@@ -128,7 +128,7 @@ public sealed class ReportProgressUseCase(
             }
         }
 
-        throw new InvalidOperationException("Listening progress could not be saved.");
+        throw new UnavailableException("Listening progress could not be saved.");
     }
 
     /// <summary>
@@ -195,6 +195,6 @@ public sealed class ReportProgressUseCase(
             }
         }
 
-        throw new InvalidOperationException("Listening progress could not be saved.");
+        throw new UnavailableException("Listening progress could not be saved.");
     }
 }

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Shenok.Back.Api.Shared.Errors;
 
 namespace Shenok.Back.Api.Shared.Security;
 
@@ -10,6 +11,7 @@ public sealed class InternalApiKeyMiddleware(RequestDelegate next, IConfiguratio
     public async Task InvokeAsync(HttpContext context)
     {
         if (context.Request.Path.StartsWithSegments("/health")
+            || context.Request.Path.StartsWithSegments("/ready")
             || context.Request.Path.StartsWithSegments("/swagger"))
         {
             await next(context);
@@ -23,16 +25,13 @@ public sealed class InternalApiKeyMiddleware(RequestDelegate next, IConfiguratio
         if (!context.Request.Headers.TryGetValue(InternalCaller.ApiKeyHeader, out var supplied)
             || !KeysMatch(expected, supplied.ToString()))
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new
-            {
-                type = "https://shenok.dev/problems/unauthorized",
-                title = "Unauthorized",
-                status = StatusCodes.Status401Unauthorized,
-                detail = "The internal API key is missing.",
-                traceId = context.TraceIdentifier,
-                errors = (object?)null
-            });
+            await ApiProblems.WriteAsync(context, new ApiProblem(
+                "https://shenok.dev/problems/unauthorized",
+                "Unauthorized",
+                StatusCodes.Status401Unauthorized,
+                "The internal API key is missing.",
+                context.TraceIdentifier,
+                null));
             return;
         }
 

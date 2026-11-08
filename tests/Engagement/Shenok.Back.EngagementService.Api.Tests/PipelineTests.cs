@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using Shenok.Back.Api.Shared.Correlation;
 
 namespace Shenok.Back.EngagementService.Api.Tests;
@@ -30,7 +31,8 @@ public sealed class PipelineTests(EngagementApiFixture api)
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal("corr-missing-key", response.Headers.GetValues(CorrelationId.HeaderName).Single());
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
+        Assert.Equal("corr-missing-key", body.GetProperty("traceId").GetString());
         Assert.Equal("The internal API key is missing.", body.GetProperty("detail").GetString());
         Assert.False(body.TryGetProperty("unlocked", out _));
     }
@@ -50,6 +52,7 @@ public sealed class PipelineTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(response, body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
         Assert.Equal("The internal API key is missing.", body.GetProperty("detail").GetString());
     }
 
@@ -60,7 +63,7 @@ public sealed class PipelineTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
-        ApiJson.AssertProblem(body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
+        ApiJson.AssertProblem(response, body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
         Assert.Equal("The caller id is missing.", body.GetProperty("detail").GetString());
     }
 
@@ -75,6 +78,7 @@ public sealed class PipelineTests(EngagementApiFixture api)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var body = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(response, body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
         Assert.Equal("The caller id is missing.", body.GetProperty("detail").GetString());
     }
 
@@ -93,6 +97,80 @@ public sealed class PipelineTests(EngagementApiFixture api)
     {
         Assert.False(api.RegistersDatabase);
         Assert.False(api.RegistersActorSystem);
+    }
+
+    [Fact]
+    public async Task Ready_is_open_without_the_internal_key()
+    {
+        var response = await api.SendAsync(HttpMethod.Get, "/ready", apiKey: false);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Healthy", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Swagger_is_not_mounted()
+    {
+        var index = await api.SendAsync(HttpMethod.Get, "/swagger", apiKey: false);
+        var document = await api.SendAsync(HttpMethod.Get, "/swagger/v1/swagger.json", apiKey: false);
+
+        Assert.Equal(HttpStatusCode.NotFound, index.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, document.StatusCode);
+    }
+
+    [Fact]
+    public async Task Malformed_json_is_validation_400()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/internal/scans");
+        request.Headers.TryAddWithoutValidation("X-Internal-Key", EngagementApiFixture.ApiKey);
+        request.Headers.TryAddWithoutValidation("X-User-Id", Guid.NewGuid().ToString("D"));
+        request.Headers.TryAddWithoutValidation("X-Correlation-Id", "corr-malformed");
+        request.Content = new StringContent("{", System.Text.Encoding.UTF8, "application/json");
+
+        var response = await api.Client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("corr-malformed", response.Headers.GetValues(CorrelationId.HeaderName).Single());
+        var body = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        Assert.Equal("corr-malformed", body.GetProperty("traceId").GetString());
+        Assert.NotEqual("https://shenok.dev/problems/server", body.GetProperty("type").GetString());
+        Assert.True(body.GetProperty("errors").EnumerateObject().Any());
+    }
+
+    [Fact]
+    public async Task Omitted_scan_body_is_validation_400()
+    {
+        var response = await api.SendAsync(
+            HttpMethod.Post,
+            "/internal/scans",
+            userId: Guid.NewGuid(),
+            correlationId: "corr-empty-body");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("corr-empty-body", response.Headers.GetValues(CorrelationId.HeaderName).Single());
+        var body = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(response, body, HttpStatusCode.BadRequest, "https://shenok.dev/problems/validation");
+        Assert.Equal("corr-empty-body", body.GetProperty("traceId").GetString());
+        Assert.True(body.GetProperty("errors").TryGetProperty("ScanId", out _));
+        Assert.True(body.GetProperty("errors").TryGetProperty("PageId", out _));
+    }
+
+    [Fact]
+    public async Task Non_guid_user_id_is_401()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/internal/can-play");
+        request.Headers.TryAddWithoutValidation("X-Internal-Key", EngagementApiFixture.ApiKey);
+        request.Headers.TryAddWithoutValidation("X-User-Id", "not-a-guid");
+        request.Content = JsonContent.Create(new { pageId = Guid.NewGuid() });
+
+        var response = await api.Client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var body = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(response, body, HttpStatusCode.Unauthorized, "https://shenok.dev/problems/unauthorized");
+        Assert.Equal("The caller id is missing.", body.GetProperty("detail").GetString());
     }
 
     private static object ScanBody() => new

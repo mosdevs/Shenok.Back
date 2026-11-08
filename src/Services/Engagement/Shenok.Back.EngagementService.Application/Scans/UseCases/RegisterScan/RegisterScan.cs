@@ -130,7 +130,7 @@ public sealed class RegisterScanUseCase(
             }
         }
 
-        throw new InvalidOperationException("The scan could not be stored.");
+        throw new UnavailableException("The scan could not be stored.");
     }
 
     private static RegisterScanResponse OwnedSnapshot(ScanReceipt receipt, UserId userId)

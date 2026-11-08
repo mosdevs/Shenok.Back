@@ -9,15 +9,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Shenok.Back.Api.Shared;
+using Shenok.Back.Api.Shared.Errors;
 using Shenok.Back.Api.Shared.Security;
+using Shenok.Back.EngagementService.Api;
 using Shenok.Back.EngagementService.Api.Controllers;
-using Shenok.Back.EngagementService.Application;
 using Shenok.Back.EngagementService.Application.Common;
 using Shenok.Back.EngagementService.Application.Common.Interfaces;
 using Shenok.Back.EngagementService.Domain.Repositories;
 using Shenok.Back.EngagementService.Infrastructure.Counters;
-using ApplicationDependencyInjection = Shenok.Back.EngagementService.Application.DependencyInjection;
+using Shenok.Back.EngagementService.Infrastructure.Persistence;
 
 namespace Shenok.Back.EngagementService.Api.Tests;
 
@@ -48,12 +48,12 @@ public sealed class EngagementApiFixture : IAsyncLifetime
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             [InternalCaller.ApiKeyConfigurationPath] = ApiKey,
-            [$"{EngagementOptions.SectionName}:AutoFollowOnScan"] = "false"
+            [$"{EngagementOptions.SectionName}:AutoFollowOnScan"] = "false",
+            [EngagementDatabase.MigrateOnStartupKey] = "false"
         });
 
         var memory = new EngagementMemory();
-        builder.Services.AddEngagementApplication(builder.Configuration);
-        builder.Services.AddShenokApi(typeof(ApplicationDependencyInjection).Assembly);
+        EngagementHost.AddServices(builder.Services, builder.Configuration, includeInfrastructure: false);
         builder.Services.AddControllers().AddApplicationPart(typeof(InternalScansController).Assembly);
         builder.Services.AddSingleton<IScanReceiptRepository>(new MemoryReceipts(memory));
         builder.Services.AddSingleton<IUserPageRelationshipRepository>(new MemoryRelationships(memory));
@@ -66,9 +66,7 @@ public sealed class EngagementApiFixture : IAsyncLifetime
         RegistersActorSystem = builder.Services.Any(RegistersAkka);
 
         _app = builder.Build();
-        _app.UseShenokApi();
-        _app.MapControllers();
-        _app.MapHealthChecks("/health");
+        EngagementHost.Map(_app);
         await _app.StartAsync();
 
         var addresses = _app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>();
@@ -152,8 +150,9 @@ internal static class ApiJson
         return document.RootElement.Clone();
     }
 
-    public static void AssertProblem(JsonElement body, HttpStatusCode status, string type)
+    public static void AssertProblem(HttpResponseMessage response, JsonElement body, HttpStatusCode status, string type)
     {
+        Assert.Equal(ApiProblems.ProblemContentType, response.Content.Headers.ContentType?.MediaType);
         Assert.Equal((int)status, body.GetProperty("status").GetInt32());
         Assert.Equal(type, body.GetProperty("type").GetString());
         Assert.False(string.IsNullOrWhiteSpace(body.GetProperty("traceId").GetString()));

@@ -1,8 +1,18 @@
 using System.Reflection;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Shenok.Back.Api.Shared.Security;
+using Shenok.Back.EngagementService.Api;
 using Shenok.Back.EngagementService.Api.Controllers;
+using Shenok.Back.EngagementService.Application.Follows.UseCases.FollowPage;
+using Shenok.Back.EngagementService.Application.Follows.UseCases.UnfollowPage;
+using Shenok.Back.EngagementService.Application.Listening.UseCases.GetListeningState;
+using Shenok.Back.EngagementService.Application.Listening.UseCases.ReportProgress;
+using Shenok.Back.EngagementService.Application.Playback.UseCases.CanPlay;
+using Shenok.Back.EngagementService.Application.Scans.UseCases.RegisterScan;
 
 namespace Shenok.Back.EngagementService.Api.Tests;
 
@@ -56,5 +66,24 @@ public sealed class EngagementApiSurfaceTests
         }
 
         Assert.Equal(ExpectedRoutes.OrderBy(route => route, StringComparer.Ordinal), routes.OrderBy(route => route, StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Every_use_case_request_has_a_validator()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            [InternalCaller.ApiKeyConfigurationPath] = "engagement-test-key"
+        }).Build();
+        var services = new ServiceCollection();
+        EngagementHost.AddServices(services, configuration, includeInfrastructure: false);
+
+        using var provider = services.BuildServiceProvider();
+        Assert.NotNull(provider.GetService<IValidator<RegisterScanRequest>>());
+        Assert.NotNull(provider.GetService<IValidator<FollowPageRequest>>());
+        Assert.NotNull(provider.GetService<IValidator<UnfollowPageRequest>>());
+        Assert.NotNull(provider.GetService<IValidator<ReportProgressRequest>>());
+        Assert.NotNull(provider.GetService<IValidator<GetListeningStateRequest>>());
+        Assert.NotNull(provider.GetService<IValidator<CanPlayRequest>>());
     }
 }
