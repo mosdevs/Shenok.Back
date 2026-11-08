@@ -32,4 +32,21 @@ public class PlaySessionTests
         Assert.True(session.Counted);
         Assert.Single(session.DomainEvents.OfType<VoicePlayedDomainEvent>());
     }
+
+    [Fact]
+    public void BelongsTo_requires_the_same_user_and_voice_and_does_not_count_the_session()
+    {
+        var userId = UserId.New();
+        var voiceId = VoiceId.New();
+        var session = PlaySession.Open(PlaySessionId.From("session-1"), userId, voiceId);
+
+        Assert.True(session.BelongsTo(userId, voiceId));
+        Assert.True(session.BelongsTo(UserId.From(userId.Value), VoiceId.From(voiceId.Value)));
+        Assert.False(session.BelongsTo(UserId.New(), voiceId));
+        Assert.False(session.BelongsTo(userId, VoiceId.New()));
+        Assert.Throws<ArgumentNullException>(() => session.BelongsTo(null!, voiceId));
+        Assert.Throws<ArgumentNullException>(() => session.BelongsTo(userId, null!));
+        Assert.False(session.Counted);
+        Assert.Empty(session.DomainEvents);
+    }
 }

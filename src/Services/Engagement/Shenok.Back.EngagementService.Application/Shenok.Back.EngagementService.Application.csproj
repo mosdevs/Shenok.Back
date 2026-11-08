@@ -7,15 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Interfaces\" />
-    <Folder Include="Follows\UseCases\FollowPage\" />
-    <Folder Include="Follows\UseCases\GetFollowStatus\" />
-    <Folder Include="Follows\UseCases\UnFollowPage\" />
-    <Folder Include="Listening\UseCases\GetListeningStateForPage\" />
-    <Folder Include="Listening\UseCases\GetListeningStateForVoice\" />
-    <Folder Include="Listening\UseCases\RecordPlaybackProgress\" />
-    <Folder Include="Unlocks\UseCases\GetPageUnlockState\" />
-    <Folder Include="Unlocks\UseCases\RegisterScanAndUnlock\" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.Application.Abstractions\Shenok.Back.Application.Abstractions.csproj" />
+    <ProjectReference Include="..\Shenok.Back.EngagementService.Domain\Shenok.Back.EngagementService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

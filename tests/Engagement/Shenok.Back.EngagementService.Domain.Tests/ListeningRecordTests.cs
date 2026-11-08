@@ -123,6 +123,55 @@ public class ListeningRecordTests
     }
 
     [Fact]
+    public void Completion_at_position_zero_is_accepted_and_does_not_move_position()
+    {
+        var userId = UserId.New();
+        var voiceId = VoiceId.New();
+        var record = ListeningRecord.Start(userId, voiceId);
+
+        var result = record.ReportProgress(PlaybackPosition.From(0), completed: true, isSeek: false);
+
+        Assert.True(result.Accepted);
+        Assert.True(result.NewlyCompleted);
+        Assert.Equal(0, record.Position.Value);
+        Assert.True(record.IsCompleted);
+        Assert.NotNull(record.LastPlayedAt);
+        var completed = Assert.Single(record.DomainEvents.OfType<VoiceCompletedDomainEvent>());
+        Assert.Equal(userId, completed.UserId);
+        Assert.Equal(voiceId, completed.VoiceId);
+    }
+
+    [Fact]
+    public void A_later_completed_true_does_not_raise_a_second_event()
+    {
+        var record = ListeningRecord.Start(UserId.New(), VoiceId.New());
+        Assert.True(record.ReportProgress(PlaybackPosition.From(10), completed: true, isSeek: false).NewlyCompleted);
+
+        var again = record.ReportProgress(PlaybackPosition.From(25), completed: true, isSeek: false);
+
+        Assert.True(again.Accepted);
+        Assert.False(again.NewlyCompleted);
+        Assert.True(record.IsCompleted);
+        Assert.Equal(25, record.Position.Value);
+        Assert.Single(record.DomainEvents.OfType<VoiceCompletedDomainEvent>());
+    }
+
+    [Fact]
+    public void Seek_with_completed_false_does_not_clear_IsCompleted()
+    {
+        var record = ListeningRecord.Start(UserId.New(), VoiceId.New());
+        Assert.True(record.ReportProgress(PlaybackPosition.From(40), completed: true, isSeek: false).Accepted);
+
+        var seek = record.ReportProgress(PlaybackPosition.From(5), completed: false, isSeek: true);
+
+        Assert.True(seek.Accepted);
+        Assert.False(seek.NewlyCompleted);
+        Assert.Equal(5, record.Position.Value);
+        Assert.True(record.IsCompleted);
+        Assert.Single(record.DomainEvents.OfType<VoiceCompletedDomainEvent>());
+    }
+
+    [Fact]
     public void Id_is_rebuilt_from_the_user_and_voice_columns()
     {
         var record = ListeningRecord.Start(UserId.New(), VoiceId.New());

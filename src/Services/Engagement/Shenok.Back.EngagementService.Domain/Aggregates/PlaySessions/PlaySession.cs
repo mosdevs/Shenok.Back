@@ -45,4 +45,16 @@ public sealed class PlaySession : AggregateRoot<PlaySessionId>
         RaiseDomainEvent(new VoicePlayedDomainEvent(Id, UserId, VoiceId));
         return true;
     }
+
+    /// <summary>
+    /// True when this session was opened for <paramref name="userId"/> and <paramref name="voiceId"/>.
+    /// <see cref="PlaySessionId"/> is chosen by the client and is the global primary key, so a loaded row can belong to someone else.
+    /// A mismatch is expected: this returns <see langword="false"/> and does not throw. The use case must not call <see cref="AcceptFirstReport"/> in that case.
+    /// </summary>
+    public bool BelongsTo(UserId userId, VoiceId voiceId)
+    {
+        ArgumentNullException.ThrowIfNull(userId);
+        ArgumentNullException.ThrowIfNull(voiceId);
+        return UserId == userId && VoiceId == voiceId;
+    }
 }

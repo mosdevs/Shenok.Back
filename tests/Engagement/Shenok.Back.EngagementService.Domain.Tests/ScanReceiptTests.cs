@@ -43,12 +43,41 @@ public class ScanReceiptTests
         Assert.InRange(receipt.CreatedAt, before, after);
         Assert.Equal(DateTimeKind.Utc, receipt.CreatedAt.Kind);
         Assert.Empty(receipt.DomainEvents);
-        Assert.Empty(InstanceMutators(typeof(ScanReceipt)));
+        Assert.Equal([nameof(ScanReceipt.BelongsTo)], InstanceMutators(typeof(ScanReceipt)));
+        Assert.Empty(PublicSetters(typeof(ScanReceipt)));
+    }
+
+    [Fact]
+    public void BelongsTo_is_true_only_for_the_user_who_stored_the_receipt()
+    {
+        var owner = UserId.New();
+        var receipt = ScanReceipt.Record(
+            ScanId.From("scan-1"),
+            owner,
+            WaveformId.New(),
+            VoiceId.New(),
+            PageId.New(),
+            unlocked: true,
+            isFollowing: false,
+            promptFollow: true,
+            PlaybackPosition.From(42));
+
+        Assert.True(receipt.BelongsTo(owner));
+        Assert.True(receipt.BelongsTo(UserId.From(owner.Value)));
+        Assert.False(receipt.BelongsTo(UserId.New()));
+        Assert.Throws<ArgumentNullException>(() => receipt.BelongsTo(null!));
+        Assert.Empty(receipt.DomainEvents);
     }
 
     private static IReadOnlyList<string> InstanceMutators(Type type) =>
         type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public)
             .Where(method => !method.IsSpecialName)
             .Select(method => method.Name)
+            .ToArray();
+
+    private static IReadOnlyList<string> PublicSetters(Type type) =>
+        type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Where(property => property.SetMethod is { IsPublic: true })
+            .Select(property => property.Name)
             .ToArray();
 }

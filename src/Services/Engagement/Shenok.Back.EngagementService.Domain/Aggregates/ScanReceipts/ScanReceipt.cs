@@ -7,6 +7,7 @@ namespace Shenok.Back.EngagementService.Domain.Aggregates.ScanReceipts;
 /// <summary>
 /// Frozen result of one client scan. A later follow or seek must not change what a retried scan id returns.
 /// There is no mutator: a duplicate id is rejected by the database, then the stored row is reloaded.
+/// <see cref="BelongsTo"/> only answers whether that row is the caller's.
 /// </summary>
 public sealed class ScanReceipt : AggregateRoot<ScanId>
 {
@@ -76,5 +77,16 @@ public sealed class ScanReceipt : AggregateRoot<ScanId>
             promptFollow,
             resumePosition,
             DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// True when this receipt was stored for <paramref name="userId"/>.
+    /// <see cref="ScanId"/> is chosen by the client and is the global primary key, so a loaded row can belong to someone else.
+    /// A mismatch is expected: this returns <see langword="false"/> and does not throw.
+    /// </summary>
+    public bool BelongsTo(UserId userId)
+    {
+        ArgumentNullException.ThrowIfNull(userId);
+        return UserId == userId;
     }
 }
