@@ -38,6 +38,9 @@
     <Project Path="tests/Content/Shenok.Back.ContentService.Domain.Tests/Shenok.Back.ContentService.Domain.Tests.csproj" />
     <Project Path="tests/Content/Shenok.Back.ContentService.Infrastructure.Tests/Shenok.Back.ContentService.Infrastructure.Tests.csproj" />
   </Folder>
+  <Folder Name="/tests/Engagement/">
+    <Project Path="tests/Engagement/Shenok.Back.EngagementService.Domain.Tests/Shenok.Back.EngagementService.Domain.Tests.csproj" />
+  </Folder>
   <Folder Name="/tests/Identity/">
     <Project Path="tests/Identity/Shenok.Back.IdentityService.Domain.Tests/Shenok.Back.IdentityService.Domain.Tests.csproj" />
     <Project Path="tests/Identity/Shenok.Back.IdentityService.IntegrationTests/Shenok.Back.IdentityService.IntegrationTests.csproj" />

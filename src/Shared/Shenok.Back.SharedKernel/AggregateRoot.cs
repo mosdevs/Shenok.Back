@@ -4,7 +4,9 @@ namespace Shenok.Back.SharedKernel
 {
     public abstract class AggregateRoot<TID> : IHasDomainEvents
     {
-        public TID Id { get; protected set; } = default!;
+        // Virtual so a derived aggregate can rebuild a composite id from its own fields.
+        // The constructor below assigns Id, so an override setter may only assign fields.
+        public virtual TID Id { get; protected set; } = default!;
         private readonly List<IDomainEvent> _domainEvents = new();
         public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
         protected AggregateRoot() { }

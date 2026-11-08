@@ -7,11 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Aggregates\ListeningRecords\" />
-    <Folder Include="Aggregates\UserPageRelationships\" />
-    <Folder Include="DomainEvents\" />
-    <Folder Include="Exceptions\" />
-    <Folder Include="Repositories\" />
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.SharedKernel\Shenok.Back.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>
