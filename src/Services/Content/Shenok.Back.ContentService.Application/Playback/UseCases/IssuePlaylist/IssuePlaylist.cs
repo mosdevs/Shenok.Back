@@ -6,6 +6,7 @@ using Shenok.Back.ContentService.Application.Playback;
 using Shenok.Back.ContentService.Application.Common.Interfaces;
 using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 using Shenok.Back.ContentService.Domain.Aggregates.WaveformMappings;
+using Shenok.Back.ContentService.Domain.Exceptions;
 using Shenok.Back.ContentService.Domain.Repositories;
 
 namespace Shenok.Back.ContentService.Application.Playback.UseCases.IssuePlaylist;
@@ -71,7 +72,14 @@ public sealed class IssuePlaylistUseCase(
     private async Task EnsureActiveScanAsync(Page page, Guid voiceId, Guid waveformId, CancellationToken cancellationToken)
     {
         var mapping = await ContentMaps.RequireWaveformAsync(mappings, waveformId, cancellationToken);
-        mapping.EnsureActiveForPlayback();
+        try
+        {
+            mapping.EnsureActiveForPlayback();
+        }
+        catch (WaveformNotActiveException exception)
+        {
+            throw new ConflictException(exception.Message);
+        }
 
         var targetsVoice = mapping.TargetType == WaveformTargetType.Voice && mapping.TargetId == voiceId;
         var targetsPage = mapping.TargetType == WaveformTargetType.Page && mapping.TargetId == page.Id.Value;

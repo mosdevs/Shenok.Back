@@ -7,6 +7,7 @@ using Shenok.Back.ContentService.Infrastructure.Persistence;
 using ApplicationDependencyInjection = Shenok.Back.ContentService.Application.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
+ContentHost.RequireApiKey(builder.Configuration);
 builder.Services.AddContentApplication();
 builder.Services.AddContentInfrastructure(builder.Configuration);
 builder.Services.AddContentApi(builder.Configuration);
@@ -20,8 +21,9 @@ app.UseShenokApi();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-await using (var scope = app.Services.CreateAsyncScope())
+if (ContentHost.ShouldMigrate(app.Configuration))
 {
+    await using var scope = app.Services.CreateAsyncScope();
     var database = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
     await database.Database.MigrateAsync();
 }

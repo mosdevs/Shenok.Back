@@ -19,7 +19,11 @@ public static class ShenokApiBuilder
         services.AddScoped<ICallerContextAccessor, CallerContextAccessor>();
         services.AddUseCasesFrom(applicationAssembly);
         services.AddValidatorsFromAssembly(applicationAssembly, includeInternalTypes: true);
-        services.AddControllers(options => options.Filters.Add<ValidationFilter>())
+        services.AddControllers(options =>
+            {
+                options.Filters.Add<InternalServiceScopeFilter>();
+                options.Filters.Add<ValidationFilter>();
+            })
             .ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true);
         services.AddHealthChecks();
         services.AddSingleton(new InternalApiKeyOptions(requireInternalApiKey));

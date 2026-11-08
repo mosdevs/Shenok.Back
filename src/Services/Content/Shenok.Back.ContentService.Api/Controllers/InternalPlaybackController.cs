@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Shenok.Back.Api.Shared.Security;
 using Shenok.Back.ContentService.Api.Http;
 using Shenok.Back.ContentService.Application.Playback.UseCases.IssuePlaylist;
 
 namespace Shenok.Back.ContentService.Api.Controllers;
 
 [ApiController]
+[InternalService]
 public sealed class InternalPlaybackController(IssuePlaylistUseCase issuePlaylist) : ControllerBase
 {
     [HttpPost("/internal/playback")]

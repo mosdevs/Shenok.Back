@@ -37,8 +37,10 @@ public sealed class InternalRouteTests(ContentApiFixture api)
             waveformId = mapping.Id.Value
         });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        ApiJson.AssertProblem(await ApiJson.ReadAsync(response), HttpStatusCode.BadRequest, "https://shenok.dev/problems/domain");
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var problem = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(problem, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
+        Assert.Contains("not active", problem.GetProperty("detail").GetString(), StringComparison.Ordinal);
     }
 
     [Fact]

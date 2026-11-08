@@ -20,15 +20,30 @@ public sealed class HttpContentCallerTests
     }
 
     [Fact]
-    public void Internal_prefix_is_a_service_call_without_a_user_id()
+    public void Marked_internal_endpoint_is_a_service_call_without_a_user_id()
     {
-        var caller = Caller("/internal/playback", userId: null, roles: null);
+        var caller = Caller("/internal/playback", userId: null, roles: null, serviceEndpoint: true);
 
         Assert.True(caller.IsInternalService);
         Assert.False(caller.IsAdmin);
         Assert.False(caller.IsContentCreator);
         var missing = Assert.Throws<UnauthorizedException>(() => caller.UserId);
         Assert.Equal("The caller id is missing.", missing.Message);
+    }
+
+    [Fact]
+    public void The_internal_prefix_and_a_client_header_cannot_mark_a_service_call()
+    {
+        var prefixed = Caller("/internal/playback", userId: null, roles: null);
+        Assert.False(prefixed.IsInternalService);
+
+        var http = new DefaultHttpContext();
+        http.Request.Path = "/pages";
+        http.Request.Headers["X-Internal-Service"] = "true";
+        http.Items[InternalCaller.ServiceItemKey] = "true";
+        var caller = new HttpContentCaller(new HttpContextAccessor { HttpContext = http });
+
+        Assert.False(caller.IsInternalService);
     }
 
     [Fact]
@@ -48,7 +63,7 @@ public sealed class HttpContentCallerTests
         Assert.Throws<InvalidOperationException>(() => caller.IsInternalService);
     }
 
-    private static HttpContentCaller Caller(string path, Guid? userId, string? roles)
+    private static HttpContentCaller Caller(string path, Guid? userId, string? roles, bool serviceEndpoint = false)
     {
         var http = new DefaultHttpContext();
         http.Request.Path = path;
@@ -56,6 +71,8 @@ public sealed class HttpContentCallerTests
             http.Request.Headers[InternalCaller.UserIdHeader] = id.ToString();
         if (roles is not null)
             http.Request.Headers[InternalCaller.RolesHeader] = roles;
+        if (serviceEndpoint)
+            http.Items[InternalCaller.ServiceItemKey] = true;
 
         return new HttpContentCaller(new HttpContextAccessor { HttpContext = http });
     }

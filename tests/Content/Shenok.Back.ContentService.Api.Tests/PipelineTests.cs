@@ -40,7 +40,7 @@ public sealed class PipelineTests(ContentApiFixture api)
         Assert.Equal(HttpStatusCode.OK, health.StatusCode);
 
         var pages = new HttpRequestMessage(HttpMethod.Get, "/pages/11111111-1111-1111-1111-111111111111");
-        pages.Headers.TryAddWithoutValidation("X-Internal-Key", "not-the-key");
+        pages.Headers.TryAddWithoutValidation("X-Internal-Key", "x");
         var response = await api.Client.SendAsync(pages);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -62,17 +62,19 @@ public sealed class PipelineTests(ContentApiFixture api)
         Assert.Contains("X-Internal-Key", document, StringComparison.Ordinal);
         Assert.Contains("X-User-Id", document, StringComparison.Ordinal);
         Assert.Contains("X-User-Roles", document, StringComparison.Ordinal);
+        Assert.Contains("not from the URL prefix", document, StringComparison.Ordinal);
+        Assert.Contains("not from the URL prefix", document, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task Development_root_redirect_still_requires_the_internal_key()
+    public async Task Root_is_not_a_public_entry()
     {
         var anonymous = await api.SendAsync(HttpMethod.Get, "/", apiKey: false);
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
 
         var signed = await api.SendAsync(HttpMethod.Get, "/");
-        Assert.Equal(HttpStatusCode.Redirect, signed.StatusCode);
-        Assert.Equal("/swagger", signed.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.NotFound, signed.StatusCode);
+        Assert.Null(signed.Headers.Location);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
@@ -19,7 +21,7 @@ public sealed class InternalApiKeyMiddleware(RequestDelegate next, IConfiguratio
             throw new InvalidOperationException("InternalAuth:ApiKey is required.");
 
         if (!context.Request.Headers.TryGetValue(InternalCaller.ApiKeyHeader, out var supplied)
-            || !string.Equals(supplied.ToString(), expected, StringComparison.Ordinal))
+            || !KeysMatch(expected, supplied.ToString()))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new
@@ -35,5 +37,12 @@ public sealed class InternalApiKeyMiddleware(RequestDelegate next, IConfiguratio
         }
 
         await next(context);
+    }
+
+    private static bool KeysMatch(string expected, string supplied)
+    {
+        var expectedHash = SHA256.HashData(Encoding.UTF8.GetBytes(expected));
+        var suppliedHash = SHA256.HashData(Encoding.UTF8.GetBytes(supplied));
+        return CryptographicOperations.FixedTimeEquals(expectedHash, suppliedHash);
     }
 }

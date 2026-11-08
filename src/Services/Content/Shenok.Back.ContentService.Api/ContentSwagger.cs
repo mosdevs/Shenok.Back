@@ -14,7 +14,7 @@ internal static class ContentSwagger
             {
                 Title = "Shenok Content",
                 Version = "v1",
-                Description = "Creator pages, voice upload, waveforms, and internal playback. Send X-Internal-Key on every call except /health and /swagger. Creator routes also need X-User-Id and X-User-Roles."
+                Description = "Creator pages, voice upload, waveforms, and internal playback. Send X-Internal-Key on every call except /health and /swagger. Creator routes also need X-User-Id and X-User-Roles. Internal service authority comes from the endpoint, not from the URL prefix."
             });
 
             options.AddSecurityDefinition("InternalKey", new OpenApiSecurityScheme
@@ -29,7 +29,7 @@ internal static class ContentSwagger
                 Name = InternalCaller.UserIdHeader,
                 Type = SecuritySchemeType.ApiKey,
                 In = ParameterLocation.Header,
-                Description = "Caller id. Required for creator routes. Internal routes authorize the service key and do not read this value."
+                Description = "Caller id. Required for creator routes. Marked internal routes authorize the service key and do not read this value."
             });
             options.AddSecurityDefinition("UserRoles", new OpenApiSecurityScheme
             {
@@ -63,7 +63,6 @@ internal static class ContentSwagger
             options.RoutePrefix = "swagger";
         });
 
-        app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
         return app;
     }
 }

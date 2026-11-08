@@ -39,6 +39,19 @@ public sealed class CreatorRouteTests(ContentApiFixture api)
     }
 
     [Fact]
+    public async Task Role_names_are_case_sensitive()
+    {
+        var response = await api.AsCreatorAsync(
+            HttpMethod.Post,
+            "/pages",
+            new { title = "Night Walks" },
+            roles: "admin, contentcreator");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        ApiJson.AssertProblem(await ApiJson.ReadAsync(response), HttpStatusCode.Forbidden, "https://shenok.dev/problems/forbidden");
+    }
+
+    [Fact]
     public async Task A_role_that_is_not_creator_or_admin_is_forbidden()
     {
         var response = await api.AsCreatorAsync(

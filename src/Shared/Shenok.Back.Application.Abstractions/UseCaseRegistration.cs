@@ -14,6 +14,9 @@ public static class UseCaseRegistration
 
         foreach (var type in useCaseTypes)
         {
+            if (services.Any(descriptor => descriptor.ServiceType == type))
+                continue;
+
             services.AddScoped(type);
             foreach (var service in type.GetInterfaces().Where(IsUseCase))
                 services.AddScoped(service, type);

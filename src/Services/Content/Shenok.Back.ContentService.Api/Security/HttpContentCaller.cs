@@ -6,7 +6,8 @@ namespace Shenok.Back.ContentService.Api.Security;
 
 /// <summary>
 /// Reads the caller from Gateway headers. The request body is never the source of the user id or roles.
-/// <see cref="IsInternalService"/> is true only for the /internal route prefix, after the internal API key middleware has already run.
+/// <see cref="IsInternalService"/> is true only when the selected endpoint is marked <see cref="InternalServiceAttribute"/>.
+/// A path prefix and a client header cannot set it.
 /// </summary>
 public sealed class HttpContentCaller(IHttpContextAccessor httpContextAccessor) : IContentCaller
 {
@@ -30,7 +31,14 @@ public sealed class HttpContentCaller(IHttpContextAccessor httpContextAccessor) 
 
     public bool IsContentCreator => HasRole("ContentCreator");
 
-    public bool IsInternalService => RequireHttp().Request.Path.StartsWithSegments("/internal");
+    public bool IsInternalService
+    {
+        get
+        {
+            var http = RequireHttp();
+            return http.Items.TryGetValue(InternalCaller.ServiceItemKey, out var marked) && marked is true;
+        }
+    }
 
     private bool HasRole(string role)
     {

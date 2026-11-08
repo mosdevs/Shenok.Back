@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Shenok.Back.Api.Shared.Security;
 using Shenok.Back.ContentService.Api.Http;
 using Shenok.Back.ContentService.Application.Counters.UseCases.ApplySubscriberDelta;
 using Shenok.Back.ContentService.Application.Counters.UseCases.IncrementPlayCount;
@@ -6,6 +7,7 @@ using Shenok.Back.ContentService.Application.Counters.UseCases.IncrementPlayCoun
 namespace Shenok.Back.ContentService.Api.Controllers;
 
 [ApiController]
+[InternalService]
 public sealed class InternalCountersController(
     ApplySubscriberDeltaUseCase applySubscriberDelta,
     IncrementPlayCountUseCase incrementPlayCount) : ControllerBase

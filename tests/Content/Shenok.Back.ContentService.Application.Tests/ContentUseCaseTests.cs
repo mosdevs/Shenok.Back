@@ -342,8 +342,9 @@ public class ContentUseCaseTests
         Assert.DoesNotContain(voice.Audio.PlaylistStorageKey!, issued.Playlist, StringComparison.Ordinal);
         Assert.Equal(1, blobs.Reads);
 
-        await Assert.ThrowsAsync<WaveformNotActiveException>(() =>
+        var revokedPlayback = await Assert.ThrowsAsync<ConflictException>(() =>
             useCase.ExecuteAsync(new IssuePlaylistRequest(voice.Id.Value, revoked.Id.Value), CancellationToken.None));
+        Assert.Contains("not active", revokedPlayback.Message, StringComparison.Ordinal);
         await Assert.ThrowsAsync<ForbiddenException>(() =>
             useCase.ExecuteAsync(new IssuePlaylistRequest(voice.Id.Value, foreign.Id.Value), CancellationToken.None));
         Assert.Equal(1, blobs.Reads);
