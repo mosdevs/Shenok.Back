@@ -31,6 +31,7 @@ public sealed class ReportProgressValidator : AbstractValidator<ReportProgressRe
 
 /// <summary>
 /// Stores an accepted progress report and counts the play session once.
+/// The listening row and the play session commit in one save.
 /// Does not check unlock. The Gateway calls <c>CanPlay</c> before asking for progress to be stored.
 /// </summary>
 public sealed class ReportProgressUseCase(
@@ -46,22 +47,11 @@ public sealed class ReportProgressUseCase(
         var sessionId = PlaySessionId.From(request.PlaySessionId);
         var position = PlaybackPosition.From(request.PositionSeconds);
 
-        var accepted = await SaveListeningAsync(
-            userId,
-            voiceId,
-            sessionId,
-            position,
-            request.Completed,
-            request.IsSeek,
-            cancellationToken);
-        if (!accepted)
-            return;
-
-        if (await CountPlayAsync(sessionId, userId, voiceId, cancellationToken))
+        if (await SaveReportAsync(userId, voiceId, sessionId, position, request.Completed, request.IsSeek, cancellationToken))
             await counters.ApplyPlayAsync(sessionId.Value, voiceId.Value, cancellationToken);
     }
 
-    private async Task<bool> SaveListeningAsync(
+    private async Task<bool> SaveReportAsync(
         UserId userId,
         VoiceId voiceId,
         PlaySessionId sessionId,
@@ -75,31 +65,65 @@ public sealed class ReportProgressUseCase(
             var isLast = attempt == EngagementPersistence.MaxAttempts - 1;
             var existing = await listeningRecords.GetAsync(userId, voiceId, cancellationToken);
             var record = existing ?? ListeningRecord.Start(userId, voiceId);
-            var report = record.ReportProgress(position, completed, isSeek);
-            if (!report.Accepted)
+            if (!record.ReportProgress(position, completed, isSeek).Accepted)
                 return false;
 
             var session = await sessions.GetAsync(sessionId, cancellationToken);
             if (session is not null && !session.BelongsTo(userId, voiceId))
                 throw new ConflictException(EngagementConflict.PlaySessionBelongsToAnotherListener);
 
-            if (existing is null)
+            var isNewRecord = existing is null;
+            if (isNewRecord)
                 await listeningRecords.AddAsync(record, cancellationToken);
             else
                 await listeningRecords.UpdateAsync(record, cancellationToken);
 
+            var counted = false;
+            if (session is null)
+            {
+                session = PlaySession.Open(sessionId, userId, voiceId);
+                counted = session.AcceptFirstReport();
+                await sessions.AddAsync(session, cancellationToken);
+            }
+            else if (session.AcceptFirstReport())
+            {
+                counted = true;
+                await sessions.UpdateAsync(session, cancellationToken);
+            }
+
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                return true;
+                return counted;
+            }
+            catch (EngagementInsertConflictException exception) when (exception.Target == EngagementInsertTarget.PlaySession)
+            {
+                var winner = await sessions.GetAsync(sessionId, cancellationToken)
+                    ?? throw new InvalidOperationException("The play session that won the insert was not found.");
+                if (!winner.BelongsTo(userId, voiceId))
+                {
+                    await SaveListeningAsync(userId, voiceId, position, completed, isSeek, cancellationToken);
+                    throw new ConflictException(EngagementConflict.PlaySessionBelongsToAnotherListener);
+                }
+
+                if (!isLast)
+                    continue;
+
+                return await SaveListeningAsync(userId, voiceId, position, completed, isSeek, cancellationToken, winner.Id);
             }
             catch (EngagementInsertConflictException exception)
-                when (!isLast && existing is null && exception.Target == EngagementInsertTarget.ListeningRecord)
+                when (isNewRecord && exception.Target == EngagementInsertTarget.ListeningRecord)
             {
+                if (isLast)
+                    break;
+
                 continue;
             }
-            catch (EngagementConcurrencyException) when (!isLast && existing is not null)
+            catch (EngagementConcurrencyException)
             {
+                if (isLast)
+                    break;
+
                 continue;
             }
         }
@@ -107,51 +131,70 @@ public sealed class ReportProgressUseCase(
         throw new InvalidOperationException("Listening progress could not be saved.");
     }
 
-    private async Task<bool> CountPlayAsync(
-        PlaySessionId sessionId,
+    /// <summary>
+    /// Writes the listening report after a combined save rolled back.
+    /// When <paramref name="ownedSessionId"/> is set, a still-uncounted session is updated in the same save.
+    /// </summary>
+    private async Task<bool> SaveListeningAsync(
         UserId userId,
         VoiceId voiceId,
-        CancellationToken cancellationToken)
+        PlaybackPosition position,
+        bool completed,
+        bool isSeek,
+        CancellationToken cancellationToken,
+        PlaySessionId? ownedSessionId = null)
     {
         for (var attempt = 0; attempt < EngagementPersistence.MaxAttempts; attempt++)
         {
             var isLast = attempt == EngagementPersistence.MaxAttempts - 1;
-            var session = await sessions.GetAsync(sessionId, cancellationToken);
-            if (session is null)
+            var existing = await listeningRecords.GetAsync(userId, voiceId, cancellationToken);
+            var record = existing ?? ListeningRecord.Start(userId, voiceId);
+            if (!record.ReportProgress(position, completed, isSeek).Accepted)
+                return false;
+
+            var isNewRecord = existing is null;
+            if (isNewRecord)
+                await listeningRecords.AddAsync(record, cancellationToken);
+            else
+                await listeningRecords.UpdateAsync(record, cancellationToken);
+
+            var counted = false;
+            if (ownedSessionId is not null)
             {
-                session = PlaySession.Open(sessionId, userId, voiceId);
-                var counted = session.AcceptFirstReport();
-                await sessions.AddAsync(session, cancellationToken);
-                try
+                var session = await sessions.GetAsync(ownedSessionId, cancellationToken)
+                    ?? throw new InvalidOperationException("The play session that won the insert was not found.");
+                if (!session.BelongsTo(userId, voiceId))
+                    throw new ConflictException(EngagementConflict.PlaySessionBelongsToAnotherListener);
+
+                if (session.AcceptFirstReport())
                 {
-                    await unitOfWork.SaveChangesAsync(cancellationToken);
-                    return counted;
-                }
-                catch (EngagementInsertConflictException exception)
-                    when (!isLast && exception.Target == EngagementInsertTarget.PlaySession)
-                {
-                    continue;
+                    counted = true;
+                    await sessions.UpdateAsync(session, cancellationToken);
                 }
             }
 
-            if (!session.BelongsTo(userId, voiceId))
-                throw new ConflictException(EngagementConflict.PlaySessionBelongsToAnotherListener);
-
-            if (!session.AcceptFirstReport())
-                return false;
-
-            await sessions.UpdateAsync(session, cancellationToken);
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                return true;
+                return counted;
             }
-            catch (EngagementConcurrencyException) when (!isLast)
+            catch (EngagementInsertConflictException exception)
+                when (isNewRecord && exception.Target == EngagementInsertTarget.ListeningRecord)
             {
+                if (isLast)
+                    break;
+
+                continue;
+            }
+            catch (EngagementConcurrencyException)
+            {
+                if (isLast)
+                    break;
+
                 continue;
             }
         }
 
-        throw new InvalidOperationException("The play session could not be saved.");
+        throw new InvalidOperationException("Listening progress could not be saved.");
     }
 }

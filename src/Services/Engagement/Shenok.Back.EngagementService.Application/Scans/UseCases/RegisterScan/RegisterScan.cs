@@ -114,12 +114,18 @@ public sealed class RegisterScanUseCase(
                 return OwnedSnapshot(winner, userId);
             }
             catch (EngagementInsertConflictException exception)
-                when (!isLast && isNew && exception.Target == EngagementInsertTarget.UserPageRelationship)
+                when (isNew && exception.Target == EngagementInsertTarget.UserPageRelationship)
             {
+                if (isLast)
+                    break;
+
                 continue;
             }
-            catch (EngagementConcurrencyException) when (!isLast && !isNew)
+            catch (EngagementConcurrencyException) when (!isNew)
             {
+                if (isLast)
+                    break;
+
                 continue;
             }
         }

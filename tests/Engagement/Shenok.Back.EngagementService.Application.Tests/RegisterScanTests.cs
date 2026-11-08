@@ -202,4 +202,22 @@ public class RegisterScanTests
         Assert.Equal([(harness.UserId, harness.PageId, 1)], harness.Counters.SubscriberDeltas);
         Assert.True(Assert.Single(harness.Memory.Relationships).IsFollowing);
     }
+
+    [Fact]
+    public async Task Second_relationship_insert_failure_throws_without_unlocking()
+    {
+        var harness = new EngagementHarness();
+        harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.UserPageRelationship);
+        harness.Memory.BeforeConflict = () =>
+            harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.UserPageRelationship);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            harness.RegisterScan().ExecuteAsync(harness.Scan(), CancellationToken.None));
+
+        Assert.Equal("The scan could not be stored.", exception.Message);
+        Assert.Empty(harness.Memory.Relationships);
+        Assert.Empty(harness.Memory.Receipts);
+        Assert.Empty(harness.Counters.SubscriberDeltas);
+        Assert.Equal(0, harness.Memory.Saves);
+    }
 }

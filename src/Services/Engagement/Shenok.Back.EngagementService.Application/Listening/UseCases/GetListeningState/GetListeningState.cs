@@ -1,5 +1,6 @@
 using FluentValidation;
 using Shenok.Back.Application.Abstractions;
+using Shenok.Back.EngagementService.Application.Common;
 using Shenok.Back.EngagementService.Domain.Aggregates.ListeningRecords;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
 using Shenok.Back.EngagementService.Domain.Repositories;
@@ -21,7 +22,11 @@ public sealed class GetListeningStateValidator : AbstractValidator<GetListeningS
     {
         RuleFor(x => x.UserId).NotEmpty();
         RuleFor(x => x.PageId).NotEmpty();
-        RuleFor(x => x.VoiceIds).NotNull();
+        RuleFor(x => x.VoiceIds)
+            .Cascade(CascadeMode.Stop)
+            .NotNull()
+            .Must(ids => ids.Count <= EngagementLimits.MaxVoicesPerRequest)
+            .WithMessage(EngagementLimits.TooManyVoicesMessage);
         RuleForEach(x => x.VoiceIds).NotEmpty();
     }
 }
@@ -39,15 +44,24 @@ public sealed class GetListeningStateUseCase(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request.VoiceIds);
+        if (request.VoiceIds.Count > EngagementLimits.MaxVoicesPerRequest)
+            throw new ArgumentOutOfRangeException(nameof(request), EngagementLimits.TooManyVoicesMessage);
 
         var userId = UserId.From(request.UserId);
         var pageId = PageId.From(request.PageId);
         var voiceIds = new VoiceId[request.VoiceIds.Count];
+        var distinct = new List<VoiceId>(request.VoiceIds.Count);
+        var seen = new HashSet<VoiceId>();
         for (var i = 0; i < request.VoiceIds.Count; i++)
-            voiceIds[i] = VoiceId.From(request.VoiceIds[i]);
+        {
+            var voiceId = VoiceId.From(request.VoiceIds[i]);
+            voiceIds[i] = voiceId;
+            if (seen.Add(voiceId))
+                distinct.Add(voiceId);
+        }
 
         var relationship = await relationships.GetAsync(userId, pageId, cancellationToken);
-        var records = await listeningRecords.ListAsync(userId, voiceIds, cancellationToken);
+        var records = await listeningRecords.ListAsync(userId, distinct, cancellationToken);
         var stored = new Dictionary<Guid, ListeningRecord>(records.Count);
         foreach (var record in records)
             stored[record.VoiceId.Value] = record;

@@ -3,6 +3,9 @@ namespace Shenok.Back.EngagementService.Application.Common;
 /// <summary>
 /// How many times a use case may save after a lost insert or an xmin conflict.
 /// The second attempt reloads the winning row and applies the same domain method again.
+/// A second retryable failure throws <see cref="InvalidOperationException"/>.
+/// A lost <see cref="EngagementInsertTarget.ScanReceipt"/> or <see cref="EngagementInsertTarget.PlaySession"/>
+/// insert is reloaded even on the last attempt, because that row may belong to the caller.
 /// </summary>
 internal static class EngagementPersistence
 {

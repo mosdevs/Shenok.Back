@@ -159,6 +159,8 @@ internal sealed class FakeListening(EngagementMemory memory) : IListeningRecordR
 {
     public int Adds { get; private set; }
 
+    public int LastListedCount { get; private set; }
+
     public Task AddAsync(ListeningRecord listeningRecord, CancellationToken ct = default)
     {
         Adds++;
@@ -174,6 +176,7 @@ internal sealed class FakeListening(EngagementMemory memory) : IListeningRecordR
         IReadOnlyCollection<VoiceId> voiceIds,
         CancellationToken ct = default)
     {
+        LastListedCount = voiceIds.Count;
         var ids = voiceIds.Select(id => id.Value).ToHashSet();
         IReadOnlyList<ListeningRecord> matches = memory.ListeningRecords
             .Where(record => record.UserId == userId && ids.Contains(record.VoiceId.Value))

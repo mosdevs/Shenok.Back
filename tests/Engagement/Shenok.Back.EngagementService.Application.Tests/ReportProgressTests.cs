@@ -123,7 +123,7 @@ public class ReportProgressTests
     {
         var harness = new EngagementHarness();
         harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.PlaySession);
-        harness.Memory.FailOnAttempt = 2;
+        harness.Memory.FailOnAttempt = 1;
         harness.Memory.BeforeConflict = () => harness.Memory.Seed(PlaySession.Open(
             PlaySessionId.From("play-1"),
             UserId.New(),
@@ -137,5 +137,80 @@ public class ReportProgressTests
         var record = Assert.Single(harness.Memory.ListeningRecords);
         Assert.Equal(15, record.Position.Value);
         Assert.False(Assert.Single(harness.Memory.Sessions).Counted);
+    }
+
+    [Fact]
+    public async Task Lost_play_session_insert_for_the_same_listener_does_not_count_again()
+    {
+        var harness = new EngagementHarness();
+        var winner = PlaySession.Open(
+            PlaySessionId.From("play-1"),
+            UserId.From(harness.UserId),
+            VoiceId.From(harness.VoiceId));
+        Assert.True(winner.AcceptFirstReport());
+        harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.PlaySession);
+        harness.Memory.FailOnAttempt = 1;
+        harness.Memory.BeforeConflict = () => harness.Memory.Seed(winner);
+
+        await harness.ReportProgress().ExecuteAsync(harness.Progress("play-1", 15), CancellationToken.None);
+
+        Assert.Empty(harness.Counters.Plays);
+        Assert.Equal(15, Assert.Single(harness.Memory.ListeningRecords).Position.Value);
+        Assert.True(Assert.Single(harness.Memory.Sessions).Counted);
+    }
+
+    [Fact]
+    public async Task Failed_combined_save_retries_and_still_counts_the_play()
+    {
+        var harness = new EngagementHarness();
+        harness.Memory.Failure = new EngagementConcurrencyException();
+
+        await harness.ReportProgress().ExecuteAsync(harness.Progress("play-1", 15), CancellationToken.None);
+
+        Assert.Equal([("play-1", harness.VoiceId)], harness.Counters.Plays);
+        Assert.Equal(15, Assert.Single(harness.Memory.ListeningRecords).Position.Value);
+        Assert.True(Assert.Single(harness.Memory.Sessions).Counted);
+        Assert.Equal(1, harness.Memory.Saves);
+    }
+
+    [Fact]
+    public async Task Listening_update_reloads_when_it_loses_a_concurrency_race()
+    {
+        var harness = new EngagementHarness();
+        var userId = UserId.From(harness.UserId);
+        var voiceId = VoiceId.From(harness.VoiceId);
+        var record = ListeningRecord.Start(userId, voiceId);
+        record.ReportProgress(PlaybackPosition.From(10), completed: false, isSeek: false);
+        harness.Memory.Seed(record);
+        harness.Memory.Failure = new EngagementConcurrencyException();
+        harness.Memory.BeforeConflict = () =>
+        {
+            var reloaded = ListeningRecord.Start(userId, voiceId);
+            reloaded.ReportProgress(PlaybackPosition.From(10), completed: false, isSeek: false);
+            harness.Memory.Seed(reloaded);
+        };
+
+        await harness.ReportProgress().ExecuteAsync(harness.Progress("play-1", 30), CancellationToken.None);
+
+        Assert.Equal(30, harness.Memory.FindListening(userId, voiceId)!.Position.Value);
+        Assert.Equal([("play-1", harness.VoiceId)], harness.Counters.Plays);
+        Assert.Equal(1, harness.Memory.Saves);
+    }
+
+    [Fact]
+    public async Task Second_persistence_failure_throws()
+    {
+        var harness = new EngagementHarness();
+        harness.Memory.Failure = new EngagementConcurrencyException();
+        harness.Memory.BeforeConflict = () => harness.Memory.Failure = new EngagementConcurrencyException();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            harness.ReportProgress().ExecuteAsync(harness.Progress("play-1", 15), CancellationToken.None));
+
+        Assert.Equal("Listening progress could not be saved.", exception.Message);
+        Assert.Empty(harness.Counters.Plays);
+        Assert.Empty(harness.Memory.ListeningRecords);
+        Assert.Empty(harness.Memory.Sessions);
+        Assert.Equal(0, harness.Memory.Saves);
     }
 }

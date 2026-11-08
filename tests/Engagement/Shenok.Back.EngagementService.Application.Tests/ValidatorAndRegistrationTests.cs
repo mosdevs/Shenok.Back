@@ -43,6 +43,16 @@ public class ValidatorAndRegistrationTests
         Assert.False(new GetListeningStateValidator().Validate(new GetListeningStateRequest(Guid.Empty, page, [])).IsValid);
         Assert.False(new GetListeningStateValidator().Validate(new GetListeningStateRequest(user, page, [Guid.Empty])).IsValid);
         Assert.True(new GetListeningStateValidator().Validate(new GetListeningStateRequest(user, page, [])).IsValid);
+        var tooMany = Enumerable.Range(0, EngagementLimits.MaxVoicesPerRequest + 1).Select(_ => Guid.NewGuid()).ToArray();
+        var atTheCap = tooMany.Take(EngagementLimits.MaxVoicesPerRequest).ToArray();
+        Assert.False(new GetListeningStateValidator().Validate(new GetListeningStateRequest(user, page, tooMany)).IsValid);
+        Assert.True(new GetListeningStateValidator().Validate(new GetListeningStateRequest(user, page, atTheCap)).IsValid);
+
+        var harnessForVoices = new EngagementHarness();
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            harnessForVoices.ListeningState().ExecuteAsync(
+                new GetListeningStateRequest(harnessForVoices.UserId, harnessForVoices.PageId, tooMany),
+                CancellationToken.None));
 
         var harness = new EngagementHarness();
         await Assert.ThrowsAsync<ArgumentException>(() =>

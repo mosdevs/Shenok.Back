@@ -52,6 +52,7 @@ public class ReadModelTests
                 new ListeningVoiceState(harness.VoiceId, true, 12)
             ],
             filled.Voices);
+        Assert.Equal(2, harness.Listening.LastListedCount);
 
         await harness.RegisterScan().ExecuteAsync(harness.Scan(), CancellationToken.None);
         var afterUnlock = await state.ExecuteAsync(

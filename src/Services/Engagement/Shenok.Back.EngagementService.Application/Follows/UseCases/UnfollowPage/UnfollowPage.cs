@@ -49,8 +49,11 @@ public sealed class UnfollowPageUseCase(
                 await counters.ApplySubscriberDeltaAsync(userId.Value, pageId.Value, delta: -1, cancellationToken);
                 return;
             }
-            catch (EngagementConcurrencyException) when (!isLast)
+            catch (EngagementConcurrencyException)
             {
+                if (isLast)
+                    break;
+
                 continue;
             }
         }

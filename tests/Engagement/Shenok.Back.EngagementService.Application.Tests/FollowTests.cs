@@ -64,4 +64,67 @@ public class FollowTests
         Assert.True(harness.Memory.FindRelationship(userId, pageId)!.IsFollowing);
         Assert.Equal(1, harness.Memory.Saves);
     }
+
+    [Fact]
+    public async Task Unfollow_reloads_when_the_update_loses_a_concurrency_race()
+    {
+        var harness = new EngagementHarness();
+        var userId = UserId.From(harness.UserId);
+        var pageId = PageId.From(harness.PageId);
+        harness.Memory.Seed(Following(userId, pageId));
+        harness.Memory.Failure = new EngagementConcurrencyException();
+        harness.Memory.BeforeConflict = () => harness.Memory.Seed(Following(userId, pageId));
+
+        await harness.Unfollow().ExecuteAsync(harness.UnfollowRequest(), CancellationToken.None);
+
+        Assert.Equal([(harness.UserId, harness.PageId, -1)], harness.Counters.SubscriberDeltas);
+        Assert.False(harness.Memory.FindRelationship(userId, pageId)!.IsFollowing);
+        Assert.Equal(1, harness.Memory.Saves);
+    }
+
+    [Fact]
+    public async Task Second_follow_failure_throws_without_calling_the_port()
+    {
+        var harness = new EngagementHarness();
+        harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.UserPageRelationship);
+        harness.Memory.BeforeConflict = () =>
+            harness.Memory.Failure = new EngagementInsertConflictException(EngagementInsertTarget.UserPageRelationship);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            harness.Follow().ExecuteAsync(harness.FollowRequest(), CancellationToken.None));
+
+        Assert.Equal("The follow could not be saved.", exception.Message);
+        Assert.Empty(harness.Counters.SubscriberDeltas);
+        Assert.Empty(harness.Memory.Relationships);
+        Assert.Equal(0, harness.Memory.Saves);
+    }
+
+    [Fact]
+    public async Task Second_unfollow_failure_throws_without_calling_the_port()
+    {
+        var harness = new EngagementHarness();
+        var userId = UserId.From(harness.UserId);
+        var pageId = PageId.From(harness.PageId);
+        harness.Memory.Seed(Following(userId, pageId));
+        harness.Memory.Failure = new EngagementConcurrencyException();
+        harness.Memory.BeforeConflict = () =>
+        {
+            harness.Memory.Seed(Following(userId, pageId));
+            harness.Memory.Failure = new EngagementConcurrencyException();
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            harness.Unfollow().ExecuteAsync(harness.UnfollowRequest(), CancellationToken.None));
+
+        Assert.Equal("The unfollow could not be saved.", exception.Message);
+        Assert.Empty(harness.Counters.SubscriberDeltas);
+        Assert.Equal(0, harness.Memory.Saves);
+    }
+
+    private static UserPageRelationship Following(UserId userId, PageId pageId)
+    {
+        var relationship = UserPageRelationship.Start(userId, pageId);
+        Assert.True(relationship.Follow());
+        return relationship;
+    }
 }
