@@ -27,4 +27,6 @@ public sealed class UnauthorizedException : Exception
 public sealed class UnavailableException : Exception
 {
     public UnavailableException(string message) : base(message) { }
+
+    public UnavailableException(string message, Exception innerException) : base(message, innerException) { }
 }

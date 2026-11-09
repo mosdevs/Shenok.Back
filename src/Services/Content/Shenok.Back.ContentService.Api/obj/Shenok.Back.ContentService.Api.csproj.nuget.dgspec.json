@@ -10,7 +10,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
         "projectName": "Shenok.Back.ContentService.Api",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -519,7 +519,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
         "projectName": "Shenok.Back.ContentService.Application",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -879,7 +879,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj",
         "projectName": "Shenok.Back.ContentService.Domain",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -1223,7 +1223,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
         "projectName": "Shenok.Back.ContentService.Infrastructure",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -1745,7 +1745,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
         "projectName": "Shenok.Back.Api.Shared",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -2241,7 +2241,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
         "projectName": "Shenok.Back.Application.Abstractions",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -2587,7 +2587,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj",
         "projectName": "Shenok.Back.SharedKernel",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -2927,7 +2927,7 @@
         "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
         "projectName": "Shenok.Back.WaveformCodec",
         "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
-        "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
         "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [

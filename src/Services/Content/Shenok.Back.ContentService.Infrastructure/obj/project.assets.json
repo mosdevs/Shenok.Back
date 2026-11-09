@@ -3377,7 +3377,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\mosta\\.nuget\\packages\\": {},
+    "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -3386,7 +3386,7 @@
       "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
       "projectName": "Shenok.Back.ContentService.Infrastructure",
       "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
-      "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\556add529b16f47388793119406bf7c6\\nuget",
       "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [

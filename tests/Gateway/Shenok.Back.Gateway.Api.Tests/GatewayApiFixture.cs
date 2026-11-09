@@ -38,10 +38,14 @@ public sealed class GatewayApiFixture : IAsyncLifetime
         });
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
-        builder.Configuration.AddInMemoryCollection(GatewayTestSettings.Values());
+        var values = GatewayTestSettings.Values();
+        values[GatewayConfiguration.AllowFixtureDecoderKey] = "true";
+        builder.Configuration.AddInMemoryCollection(values);
 
         GatewayHost.AddServices(builder.Services, builder.Configuration);
-        builder.Services.AddControllers().AddApplicationPart(typeof(AuthProbeController).Assembly);
+        builder.Services.AddControllers()
+            .AddApplicationPart(typeof(GatewayHost).Assembly)
+            .AddApplicationPart(typeof(AuthProbeController).Assembly);
         builder.Services.AddHttpClient(GatewayClients.Identity)
             .ConfigurePrimaryHttpMessageHandler(() => new RecordingHandler(Identity));
         builder.Services.AddHttpClient(GatewayClients.Content)
@@ -77,9 +81,10 @@ public sealed class GatewayApiFixture : IAsyncLifetime
         string path,
         string? bearer = null,
         string? correlationId = null,
-        string? internalKey = null)
+        string? internalKey = null,
+        HttpContent? content = null)
     {
-        var request = new HttpRequestMessage(method, path);
+        var request = new HttpRequestMessage(method, path) { Content = content };
         if (bearer is not null)
             request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + bearer);
         if (correlationId is not null)

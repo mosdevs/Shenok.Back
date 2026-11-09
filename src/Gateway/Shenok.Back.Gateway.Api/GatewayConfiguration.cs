@@ -12,6 +12,10 @@ internal static class GatewayConfiguration
 
     public const string EngagementBaseUrlKey = "Gateway:EngagementBaseUrl";
 
+    public const string RecognitionBaseUrlKey = "Gateway:RecognitionBaseUrl";
+
+    public const string AllowFixtureDecoderKey = "Gateway:AllowFixtureDecoder";
+
     public const string JwtIssuerKey = "Jwt:Issuer";
 
     public const string JwtAudienceKey = "Jwt:Audience";

@@ -12,6 +12,8 @@ internal sealed record GatewaySettings(
     Uri IdentityBaseUrl,
     Uri ContentBaseUrl,
     Uri EngagementBaseUrl,
+    Uri? RecognitionBaseUrl,
+    bool AllowFixtureDecoder,
     TimeSpan JsonTimeout)
 {
     public static GatewaySettings Read(IConfiguration configuration)
@@ -40,6 +42,8 @@ internal sealed record GatewaySettings(
             RequireBaseUrl(configuration, GatewayConfiguration.IdentityBaseUrlKey),
             RequireBaseUrl(configuration, GatewayConfiguration.ContentBaseUrlKey),
             RequireBaseUrl(configuration, GatewayConfiguration.EngagementBaseUrlKey),
+            OptionalBaseUrl(configuration, GatewayConfiguration.RecognitionBaseUrlKey),
+            ReadFlag(configuration, GatewayConfiguration.AllowFixtureDecoderKey),
             RequireTimeout(configuration));
     }
 
@@ -52,6 +56,33 @@ internal sealed record GatewaySettings(
         }
 
         return uri;
+    }
+
+    private static Uri? OptionalBaseUrl(IConfiguration configuration, string key)
+    {
+        var raw = configuration[key];
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        if (NormalizeBaseUrl(raw) is not Uri uri)
+        {
+            throw new InvalidOperationException(
+                $"{key} must be an absolute http(s) URL without credentials, a query, or a fragment.");
+        }
+
+        return uri;
+    }
+
+    private static bool ReadFlag(IConfiguration configuration, string key)
+    {
+        var raw = configuration[key];
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        if (bool.TryParse(raw, out var value))
+            return value;
+
+        throw new InvalidOperationException($"{key} must be true or false.");
     }
 
     private static Uri? NormalizeBaseUrl(string? value)
