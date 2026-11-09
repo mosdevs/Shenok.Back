@@ -7,10 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Aggregates\WaveformIndex\" />
-    <Folder Include="Exceptions\" />
-    <Folder Include="Services\" />
-    <Folder Include="Repositories\" />
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.SharedKernel\Shenok.Back.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>
