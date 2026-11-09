@@ -45,6 +45,9 @@ public sealed class VoiceConfiguration : IEntityTypeConfiguration<Voice>
         });
 
         builder.HasKey(voice => voice.Id);
+        builder.HasIndex(voice => voice.Id)
+            .HasDatabaseName("ix_voices_pending_id")
+            .HasFilter("packaging_status = 'Pending'");
         builder.Property(voice => voice.Id)
             .HasConversion(id => id.Value, value => VoiceId.From(value))
             .HasColumnName("id");

@@ -1,4 +1,5 @@
 using Shenok.Back.Application.Abstractions.Exceptions;
+using Shenok.Back.ContentService.Application.Common;
 using Shenok.Back.ContentService.Application.Voices.UseCases.AddVoiceToPage;
 using Shenok.Back.ContentService.Application.Voices.UseCases.GetVoice;
 using Shenok.Back.ContentService.Application.Voices.UseCases.UpdateVoiceTitle;
@@ -40,6 +41,73 @@ public class VoiceWorkflowTests
         Assert.DoesNotContain("Episode", stored.Audio.SourceStorageKey);
         Assert.Equal(1, unit.Saves);
         Assert.Empty(blobs.Deletes);
+        Assert.Equal([stored.Id], page.VoiceIds);
+    }
+
+    [Fact]
+    public async Task Upload_on_a_published_page_stays_off_the_episode_order()
+    {
+        var owner = new FakeCaller();
+        var page = ApplicationScenes.Draft(owner);
+        var ready = ApplicationScenes.Ready(page);
+        page.AddVoiceReference(ready.Id, ready.Status);
+        page.Publish(new Dictionary<VoiceId, PackagingStatus> { [ready.Id] = ready.Status });
+        var pages = new FakePages();
+        await pages.AddAsync(page);
+        var blobs = new FakeBlobs();
+        var useCase = new UploadVoiceUseCase(owner, pages, new FakeVoices(), blobs, new FakeUnitOfWork());
+
+        var receipt = await useCase.ExecuteAsync(
+            new UploadVoiceRequest(page.Id.Value, "Next", "audio/mpeg", 8, new MemoryStream(new byte[8])),
+            CancellationToken.None);
+
+        Assert.Equal(nameof(PackagingStatus.Pending), receipt.PackagingStatus);
+        Assert.Equal([ready.Id], page.VoiceIds);
+        Assert.Single(blobs.Puts);
+    }
+
+    [Fact]
+    public async Task Upload_rejects_a_full_draft_before_writing_a_blob()
+    {
+        var owner = new FakeCaller();
+        var page = ApplicationScenes.Draft(owner);
+        for (var index = 0; index < AudioLimits.MaxVoicesPerPage; index++)
+            page.AddVoiceReference(VoiceId.New(), PackagingStatus.Pending);
+
+        var pages = new FakePages();
+        await pages.AddAsync(page);
+        var blobs = new FakeBlobs();
+        var useCase = new UploadVoiceUseCase(owner, pages, new FakeVoices(), blobs, new FakeUnitOfWork());
+
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
+            useCase.ExecuteAsync(
+                new UploadVoiceRequest(page.Id.Value, "Overflow", "audio/wav", 32, new MemoryStream(new byte[32])),
+                CancellationToken.None));
+
+        Assert.Contains(AudioLimits.MaxVoicesPerPage.ToString(), conflict.Message, StringComparison.Ordinal);
+        Assert.Empty(blobs.Puts);
+        Assert.Equal(AudioLimits.MaxVoicesPerPage, page.VoiceIds.Count);
+    }
+
+    [Fact]
+    public async Task Upload_then_add_voice_conflicts_because_the_episode_is_already_listed()
+    {
+        var owner = new FakeCaller();
+        var page = ApplicationScenes.Draft(owner);
+        var pages = new FakePages();
+        await pages.AddAsync(page);
+        var voices = new FakeVoices();
+        var upload = new UploadVoiceUseCase(owner, pages, voices, new FakeBlobs(), new FakeUnitOfWork());
+        var receipt = await upload.ExecuteAsync(
+            new UploadVoiceRequest(page.Id.Value, "Episode", "audio/wav", 32, new MemoryStream(new byte[32])),
+            CancellationToken.None);
+
+        var add = new AddVoiceToPageUseCase(owner, pages, voices, new FakeUnitOfWork(), new FakeCatalog(voices));
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
+            add.ExecuteAsync(new AddVoiceToPageRequest(page.Id.Value, receipt.VoiceId), CancellationToken.None));
+
+        Assert.Contains(receipt.VoiceId.ToString(), conflict.Message, StringComparison.Ordinal);
+        Assert.Equal([VoiceId.From(receipt.VoiceId)], page.VoiceIds);
     }
 
     [Fact]
@@ -79,6 +147,7 @@ public class VoiceWorkflowTests
 
         Assert.Equal(page.Id.Value, receipt.PageId);
         Assert.Equal(nameof(PackagingStatus.Pending), receipt.PackagingStatus);
+        Assert.Equal([VoiceId.From(receipt.VoiceId)], page.VoiceIds);
     }
 
     [Fact]

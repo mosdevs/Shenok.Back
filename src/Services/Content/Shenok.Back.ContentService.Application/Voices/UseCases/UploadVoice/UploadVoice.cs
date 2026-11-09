@@ -1,5 +1,6 @@
 using FluentValidation;
 using Shenok.Back.Application.Abstractions;
+using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.ContentService.Application.Common;
 using Shenok.Back.ContentService.Application.Common.Interfaces;
 using Shenok.Back.ContentService.Domain.Aggregates.Pages;
@@ -47,6 +48,12 @@ public sealed class UploadVoiceUseCase(
         if (page.Status == PageStatus.Archived)
             throw new PageArchivedException(page.Id);
 
+        // A published page accepts only a Ready voice. The pending upload stays off the
+        // episode list until packaging finishes and AddVoiceToPage runs.
+        var appendToEpisodeOrder = page.Status != PageStatus.Published;
+        if (appendToEpisodeOrder && page.VoiceIds.Count >= AudioLimits.MaxVoicesPerPage)
+            throw new ConflictException($"A page cannot have more than {AudioLimits.MaxVoicesPerPage} voices.");
+
         if (request.Content is null)
             throw new InvalidAudioAssetException("Source content is required.");
         if (request.SizeBytes <= 0 || request.SizeBytes > AudioAsset.MaxSourceSizeBytes)
@@ -64,6 +71,20 @@ public sealed class UploadVoiceUseCase(
         try
         {
             var voice = Voice.CreatePending(page.Id, VoiceTitle.Create(request.Title), storageKey, contentType, request.SizeBytes);
+            if (appendToEpisodeOrder)
+            {
+                try
+                {
+                    page.AddVoiceReference(voice.Id, voice.Status);
+                }
+                catch (DuplicateVoiceOnPageException exception)
+                {
+                    throw new ConflictException(exception.Message);
+                }
+
+                await pages.UpdateAsync(page, cancellationToken);
+            }
+
             await voices.AddAsync(voice, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return new UploadVoiceResponse(

@@ -20,6 +20,7 @@ public sealed class VoicePackagingCoordinatorTests(InfrastructureFixture fixture
         var page = ContentFactory.DraftPage();
         var pageId = page.Id;
         var pending = ContentFactory.PendingVoice(pageId);
+        page.AddVoiceReference(pending.Id, pending.Status);
         var ready = ContentFactory.ReadyVoice(pageId);
         var failed = ContentFactory.FailedVoice(pageId);
         var readyPlaylist = ready.Audio.PlaylistStorageKey;

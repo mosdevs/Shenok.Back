@@ -3,7 +3,6 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Streams;
 using Akka.Streams.Dsl;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Shenok.Back.ContentService.Application.Voices.UseCases.PackageVoice;
 using Shenok.Back.ContentService.Domain.Aggregates.Voices;
@@ -12,7 +11,7 @@ using Shenok.Back.ContentService.Infrastructure.Persistence;
 namespace Shenok.Back.ContentService.Infrastructure.Packaging;
 
 /// <summary>
-/// Polls pending voices and encodes them through one local Akka.Streams graph.
+/// Polls the packaging queue and encodes those voices through one local Akka.Streams graph.
 /// The stream's <c>SelectAsync</c> parallelism is the only scale knob: at most two FFmpeg processes.
 /// Cluster sharding, routers, and pub/sub are the wrong tools here. A voice has no in-memory actor state;
 /// Postgres is the queue, and this process also serves HTTP.
@@ -83,12 +82,7 @@ public sealed class VoicePackagingCoordinator : ReceiveActor
         await using (var scope = _scopes.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
-            voiceIds = await db.Voices.AsNoTracking()
-                .Where(voice => voice.Audio.PackagingStatus == PackagingStatus.Pending)
-                .OrderBy(voice => voice.Id)
-                .Select(voice => voice.Id)
-                .Take(_options.BatchSize)
-                .ToListAsync(cancellationToken);
+            voiceIds = await PackagingQueue.ListAsync(db, _options.BatchSize, cancellationToken);
         }
 
         if (voiceIds.Count == 0)

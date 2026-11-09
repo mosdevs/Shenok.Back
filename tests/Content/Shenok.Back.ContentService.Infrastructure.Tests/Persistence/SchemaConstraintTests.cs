@@ -28,6 +28,7 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
         Assert.Contains("play_counter_receipts", tables);
         Assert.Contains("outbox_messages", tables);
         Assert.Contains("ix_voices_source_storage_key", indexes);
+        Assert.Contains("ix_voices_pending_id", indexes);
         Assert.Contains("ix_voices_playlist_storage_key", indexes);
         Assert.Contains("ix_voices_segment_prefix", indexes);
         Assert.Contains("ix_waveform_mappings_waveform_code", indexes);
@@ -36,6 +37,10 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
         var indexDef = await QueryStringAsync(
             "SELECT indexdef FROM pg_indexes WHERE indexname = 'ix_outbox_messages_unpublished'");
         Assert.Contains("published_on IS NULL", indexDef, StringComparison.OrdinalIgnoreCase);
+        var pendingIndex = await QueryStringAsync(
+            "SELECT indexdef FROM pg_indexes WHERE indexname = 'ix_voices_pending_id'");
+        Assert.Contains("packaging_status", pendingIndex, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("'Pending'", pendingIndex, StringComparison.Ordinal);
 
         await using var connection = await OpenAsync();
         await using var command = new NpgsqlCommand(

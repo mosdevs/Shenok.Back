@@ -190,6 +190,10 @@ public sealed class CreatorRouteTests(ContentApiFixture api)
         Assert.Equal(4, body.GetProperty("sizeBytes").GetInt64());
         Assert.Equal("audio/wav", body.GetProperty("contentType").GetString());
         Assert.Equal(puts + 1, api.Blobs.Puts.Count);
+        var listed = (await ReadPageAsync(page.Id.Value)).GetProperty("voices");
+        Assert.Equal(1, listed.GetArrayLength());
+        Assert.Equal(voiceId, listed[0].GetProperty("voiceId").GetGuid());
+        Assert.Equal("Pending", listed[0].GetProperty("packagingStatus").GetString());
 
         using var empty = new MultipartFormDataContent();
         empty.Add(new StringContent("No file"), "title");

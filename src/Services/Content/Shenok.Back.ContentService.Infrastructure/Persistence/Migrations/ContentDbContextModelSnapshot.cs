@@ -141,6 +141,10 @@ namespace Shenok.Back.ContentService.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Id")
+                        .HasDatabaseName("ix_voices_pending_id")
+                        .HasFilter("packaging_status = 'Pending'");
+
                     b.HasIndex("PageId")
                         .HasDatabaseName("ix_voices_page_id");
 
