@@ -23,8 +23,6 @@ public readonly record struct IndexApplyResult
 
 /// <summary>
 /// Discriminator for <see cref="IndexApplyResult"/>. The row is written only for <see cref="Applied"/>.
-/// </summary>
-/// <summary>
 /// Zero is unused so <c>default(IndexApplyResult)</c> is not <see cref="Applied"/>.
 /// </summary>
 public enum IndexApplyOutcome

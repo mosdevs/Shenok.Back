@@ -1,18 +1,14 @@
-using Shenok.Back.RecognitionService.Domain.Exceptions;
-using LayoutRevision = Shenok.Back.RecognitionService.Domain.Aggregates.WaveformIndex.LayoutVersion; // The int property hides this type.
-
 namespace Shenok.Back.RecognitionService.Domain.Aggregates.WaveformIndex;
 
 /// <summary>
-/// One code in the recognition index. This is a projection of Content's mapping, not an aggregate:
-/// it raises no domain events and it does not inherit <c>AggregateRoot</c>.
-/// Content owns the mapping. Recognition stores the latest fact it is willing to believe.
+/// One code in the recognition index. This is a projection of Content's mapping.
+/// It raises no domain events. Content owns the mapping. Recognition stores the latest fact it is willing to believe.
 /// </summary>
 /// <remarks>
 /// Timestamps on the row are the event's <c>occurredOn</c>. The methods do not read the clock.
-/// The caller normalizes that instant to UTC before it arrives here. <see cref="DateTime"/>
-/// compares ticks and ignores <see cref="DateTimeKind"/>, so a local value would compare equal
-/// to a UTC value that is a different instant. A non-UTC timestamp is rejected before any compare.
+/// The caller normalizes that instant to UTC before <see cref="WaveformFact.Create"/>.
+/// <see cref="DateTime"/> compares ticks and ignores <see cref="DateTimeKind"/>, so a local value
+/// would compare equal to a UTC value that is a different instant.
 /// A stale fact, a duplicate event, and a conflicting register do not throw. Throwing would
 /// nack a message that can never succeed. The inbox still records that event id.
 /// </remarks>
@@ -66,67 +62,53 @@ public sealed class WaveformIndexEntry
     /// <summary>
     /// First fact for this code is a registration. The row is active.
     /// </summary>
-    public static WaveformIndexEntry Register(
-        WaveformCode code,
-        WaveformId waveformId,
-        WaveformTargetType targetType,
-        Guid targetId,
-        int layoutVersion,
-        DateTime occurredOn,
-        Guid eventId)
-        => Create(code, waveformId, targetType, targetId, layoutVersion, occurredOn, eventId, WaveformIndexStatus.Active);
+    public static WaveformIndexEntry Register(WaveformFact fact)
+    {
+        ArgumentNullException.ThrowIfNull(fact);
+        return Create(fact, WaveformIndexStatus.Active);
+    }
 
     /// <summary>
     /// First fact for this code is a revoke. The row is a tombstone, so a later register cannot create an active hit.
     /// </summary>
-    public static WaveformIndexEntry RevokeFirst(
-        WaveformCode code,
-        WaveformId waveformId,
-        WaveformTargetType targetType,
-        Guid targetId,
-        int layoutVersion,
-        DateTime occurredOn,
-        Guid eventId)
-        => Create(code, waveformId, targetType, targetId, layoutVersion, occurredOn, eventId, WaveformIndexStatus.Revoked);
+    public static WaveformIndexEntry RevokeFirst(WaveformFact fact)
+    {
+        ArgumentNullException.ThrowIfNull(fact);
+        return Create(fact, WaveformIndexStatus.Revoked);
+    }
 
     /// <summary>
     /// Applies a register to a row that already exists.
-    /// A strictly older timestamp is stale. The same event id at the same timestamp changes nothing.
-    /// A revoked row stays revoked, including when the register is newer.
-    /// The same waveform and the same target move the source timestamp only when the fact is strictly newer.
-    /// A different waveform id or target is a conflict and leaves the row alone.
-    /// When the timestamps are equal and the identities differ, the register loses.
+    /// A strictly older timestamp is stale, including when the event id matches.
+    /// The same event id at an equal or newer timestamp changes nothing. A replay must not move the clock.
+    /// A revoked row stays revoked.
+    /// A different waveform id or target is a conflict.
+    /// The same identity at the same timestamp changes nothing.
+    /// The same identity at a strictly newer timestamp refreshes the source fact and the layout version.
     /// </summary>
-    public IndexApplyResult ApplyRegistered(
-        WaveformCode code,
-        WaveformId waveformId,
-        WaveformTargetType targetType,
-        Guid targetId,
-        int layoutVersion,
-        DateTime occurredOn,
-        Guid eventId)
+    public IndexApplyResult ApplyRegistered(WaveformFact fact)
     {
-        EnsureFact(code, waveformId, targetType, targetId, layoutVersion, occurredOn, eventId);
-        EnsureSameCode(code);
+        ArgumentNullException.ThrowIfNull(fact);
+        EnsureSameCode(fact);
 
-        if (occurredOn < SourceOccurredOn)
+        if (fact.OccurredOn < SourceOccurredOn)
             return IndexApplyResult.IgnoredStale;
 
-        if (occurredOn == SourceOccurredOn && eventId == SourceEventId)
+        if (fact.EventId == SourceEventId)
             return IndexApplyResult.Unchanged;
 
         if (Status == WaveformIndexStatus.Revoked)
             return IndexApplyResult.IgnoredConflict;
 
-        if (!SameIdentity(waveformId, targetType, targetId))
+        if (!SameIdentity(fact))
             return IndexApplyResult.IgnoredConflict;
 
-        // Equal timestamps do not refresh the row. Only a strictly newer register of the same identity does.
-        if (occurredOn == SourceOccurredOn)
+        if (fact.OccurredOn == SourceOccurredOn)
             return IndexApplyResult.Unchanged;
 
-        SourceOccurredOn = occurredOn;
-        SourceEventId = eventId;
+        SourceOccurredOn = fact.OccurredOn;
+        SourceEventId = fact.EventId;
+        LayoutVersion = fact.Layout.Value;
         return IndexApplyResult.Applied;
     }
 
@@ -134,90 +116,44 @@ public sealed class WaveformIndexEntry
     /// Applies a revoke to a row that already exists.
     /// A strictly older timestamp is stale. The same event id changes nothing once it is not older.
     /// An equal timestamp with a different event id wins: revoke beats register.
-    /// The waveform id, target, and layout version stay as they were. Only status and the source fact move.
+    /// Waveform id, target, and layout version stay as they were. Only status and the source fact move.
     /// </summary>
-    public IndexApplyResult ApplyRevoked(
-        WaveformCode code,
-        WaveformId waveformId,
-        WaveformTargetType targetType,
-        Guid targetId,
-        int layoutVersion,
-        DateTime occurredOn,
-        Guid eventId)
+    public IndexApplyResult ApplyRevoked(WaveformFact fact)
     {
-        EnsureFact(code, waveformId, targetType, targetId, layoutVersion, occurredOn, eventId);
-        EnsureSameCode(code);
+        ArgumentNullException.ThrowIfNull(fact);
+        EnsureSameCode(fact);
 
-        if (occurredOn < SourceOccurredOn)
+        if (fact.OccurredOn < SourceOccurredOn)
             return IndexApplyResult.IgnoredStale;
 
-        if (eventId == SourceEventId)
+        if (fact.EventId == SourceEventId)
             return IndexApplyResult.Unchanged;
 
         Status = WaveformIndexStatus.Revoked;
-        SourceOccurredOn = occurredOn;
-        SourceEventId = eventId;
+        SourceOccurredOn = fact.OccurredOn;
+        SourceEventId = fact.EventId;
         return IndexApplyResult.Applied;
     }
 
-    private static WaveformIndexEntry Create(
-        WaveformCode code,
-        WaveformId waveformId,
-        WaveformTargetType targetType,
-        Guid targetId,
-        int layoutVersion,
-        DateTime occurredOn,
-        Guid eventId,
-        WaveformIndexStatus status)
-    {
-        EnsureFact(code, waveformId, targetType, targetId, layoutVersion, occurredOn, eventId);
-        var version = LayoutRevision.From(layoutVersion);
-
-        return new WaveformIndexEntry(
-            code,
-            waveformId,
-            targetType,
-            targetId,
-            version.Value,
-            occurredOn,
-            eventId,
+    private static WaveformIndexEntry Create(WaveformFact fact, WaveformIndexStatus status)
+        => new(
+            fact.Code,
+            fact.WaveformId,
+            fact.TargetType,
+            fact.TargetId,
+            fact.Layout.Value,
+            fact.OccurredOn,
+            fact.EventId,
             status);
-    }
 
-    private void EnsureSameCode(WaveformCode code)
+    private void EnsureSameCode(WaveformFact fact)
     {
-        if (code != Code)
+        if (fact.Code != Code)
             throw new ArgumentException(
                 "A waveform fact can only be applied to the index row for that code.",
-                nameof(code));
+                nameof(fact));
     }
 
-    private bool SameIdentity(WaveformId waveformId, WaveformTargetType targetType, Guid targetId)
-        => waveformId == WaveformId && targetType == TargetType && targetId == TargetId;
-
-    private static void EnsureFact(
-        WaveformCode code,
-        WaveformId waveformId,
-        WaveformTargetType targetType,
-        Guid targetId,
-        int layoutVersion,
-        DateTime occurredOn,
-        Guid eventId)
-    {
-        ArgumentNullException.ThrowIfNull(code);
-        ArgumentNullException.ThrowIfNull(waveformId);
-
-        if (!Enum.IsDefined(targetType) || targetId == Guid.Empty)
-            throw new InvalidWaveformTargetException(targetType, targetId);
-
-        _ = LayoutRevision.From(layoutVersion);
-
-        if (occurredOn.Kind != DateTimeKind.Utc)
-            throw new ArgumentException(
-                "Occurred-on must be UTC. Normalize the publisher timestamp before it reaches the index.",
-                nameof(occurredOn));
-
-        if (eventId == Guid.Empty)
-            throw new ArgumentException("Event id cannot be empty.", nameof(eventId));
-    }
+    private bool SameIdentity(WaveformFact fact)
+        => fact.WaveformId == WaveformId && fact.TargetType == TargetType && fact.TargetId == TargetId;
 }

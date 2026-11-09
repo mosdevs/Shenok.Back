@@ -15,14 +15,7 @@ public class WaveformIndexEntryTests
         var registered = Entry();
         var revokeEventId = Guid.NewGuid();
 
-        var revoked = registered.ApplyRevoked(
-            registered.Code,
-            registered.WaveformId,
-            registered.TargetType,
-            registered.TargetId,
-            registered.LayoutVersion,
-            Later,
-            revokeEventId);
+        var revoked = registered.ApplyRevoked(FactFor(registered, occurredOn: Later, eventId: revokeEventId));
 
         Assert.Equal(IndexApplyResult.Applied, revoked);
         Assert.Equal(WaveformIndexStatus.Revoked, registered.Status);
@@ -30,18 +23,17 @@ public class WaveformIndexEntryTests
         Assert.Equal(Later, registered.SourceOccurredOn);
         Assert.Equal(revokeEventId, registered.SourceEventId);
 
-        var repeat = registered.ApplyRevoked(
-            registered.Code,
-            WaveformId.New(),
-            WaveformTargetType.Voice,
-            Guid.NewGuid(),
-            registered.LayoutVersion,
-            Later,
-            revokeEventId);
+        var repeat = registered.ApplyRevoked(Fact(
+            code: registered.Code,
+            waveformId: WaveformId.New(),
+            targetType: WaveformTargetType.Voice,
+            occurredOn: Later,
+            eventId: revokeEventId));
 
         Assert.Equal(IndexApplyResult.Unchanged, repeat);
         Assert.Equal(WaveformIndexStatus.Revoked, registered.Status);
         Assert.Equal(revokeEventId, registered.SourceEventId);
+        Assert.Equal(LayoutVersion.Version1, registered.LayoutVersion);
     }
 
     [Fact]
@@ -51,14 +43,12 @@ public class WaveformIndexEntryTests
         var originalEventId = revoked.SourceEventId;
         var originalWaveformId = revoked.WaveformId;
 
-        var result = revoked.ApplyRegistered(
-            revoked.Code,
-            WaveformId.New(),
-            WaveformTargetType.Voice,
-            Guid.NewGuid(),
-            LayoutVersion.Version1,
-            Earlier,
-            Guid.NewGuid());
+        var result = revoked.ApplyRegistered(Fact(
+            code: revoked.Code,
+            waveformId: WaveformId.New(),
+            targetType: WaveformTargetType.Voice,
+            layoutVersion: 2,
+            occurredOn: Earlier));
 
         Assert.Equal(IndexApplyResult.IgnoredStale, result);
         Assert.Equal(WaveformIndexStatus.Revoked, revoked.Status);
@@ -66,6 +56,7 @@ public class WaveformIndexEntryTests
         Assert.Equal(originalEventId, revoked.SourceEventId);
         Assert.Equal(originalWaveformId, revoked.WaveformId);
         Assert.Equal(SameInstant, revoked.SourceOccurredOn);
+        Assert.Equal(LayoutVersion.Version1, revoked.LayoutVersion);
     }
 
     [Fact]
@@ -74,19 +65,19 @@ public class WaveformIndexEntryTests
         var revoked = RevokedEntry(SameInstant);
         var originalWaveformId = revoked.WaveformId;
 
-        var result = revoked.ApplyRegistered(
-            revoked.Code,
-            WaveformId.New(),
-            revoked.TargetType,
-            revoked.TargetId,
-            LayoutVersion.Version1,
-            Later,
-            Guid.NewGuid());
+        var result = revoked.ApplyRegistered(Fact(
+            code: revoked.Code,
+            waveformId: WaveformId.New(),
+            targetType: revoked.TargetType,
+            targetId: revoked.TargetId,
+            layoutVersion: 2,
+            occurredOn: Later));
 
         Assert.Equal(IndexApplyResult.IgnoredConflict, result);
         Assert.Equal(WaveformIndexStatus.Revoked, revoked.Status);
         Assert.Equal(originalWaveformId, revoked.WaveformId);
         Assert.Equal(SameInstant, revoked.SourceOccurredOn);
+        Assert.Equal(LayoutVersion.Version1, revoked.LayoutVersion);
     }
 
     [Fact]
@@ -99,14 +90,12 @@ public class WaveformIndexEntryTests
         var targetId = entry.TargetId;
         var eventId = entry.SourceEventId;
 
-        var result = entry.ApplyRegistered(
-            code,
-            waveformId,
-            WaveformTargetType.Voice,
-            Guid.NewGuid(),
-            entry.LayoutVersion,
-            Later,
-            Guid.NewGuid());
+        var result = entry.ApplyRegistered(Fact(
+            code: code,
+            waveformId: waveformId,
+            targetType: WaveformTargetType.Voice,
+            layoutVersion: 2,
+            occurredOn: Later));
 
         Assert.Equal(IndexApplyResult.IgnoredConflict, result);
         Assert.Equal(code, entry.Code);
@@ -115,6 +104,7 @@ public class WaveformIndexEntryTests
         Assert.Equal(targetId, entry.TargetId);
         Assert.Equal(WaveformIndexStatus.Active, entry.Status);
         Assert.Equal(eventId, entry.SourceEventId);
+        Assert.Equal(LayoutVersion.Version1, entry.LayoutVersion);
         Assert.True(entry.IsActive);
     }
 
@@ -125,19 +115,38 @@ public class WaveformIndexEntryTests
         var waveformId = entry.WaveformId;
         var nextEventId = Guid.NewGuid();
 
-        var result = entry.ApplyRegistered(
-            entry.Code,
-            waveformId,
-            entry.TargetType,
-            entry.TargetId,
-            entry.LayoutVersion,
-            Later,
-            nextEventId);
+        var result = entry.ApplyRegistered(FactFor(
+            entry,
+            occurredOn: Later,
+            eventId: nextEventId));
 
         Assert.Equal(IndexApplyResult.Applied, result);
         Assert.Equal(nextEventId, entry.SourceEventId);
         Assert.Equal(Later, entry.SourceOccurredOn);
         Assert.Equal(waveformId, entry.WaveformId);
+        Assert.Equal(WaveformIndexStatus.Active, entry.Status);
+    }
+
+    [Fact]
+    public void Newer_register_for_the_same_identity_stores_the_incoming_layout()
+    {
+        var entry = Entry();
+        var waveformId = entry.WaveformId;
+        var targetId = entry.TargetId;
+        var nextEventId = Guid.NewGuid();
+
+        var result = entry.ApplyRegistered(FactFor(
+            entry,
+            layoutVersion: 2,
+            occurredOn: Later,
+            eventId: nextEventId));
+
+        Assert.Equal(IndexApplyResult.Applied, result);
+        Assert.Equal(2, entry.LayoutVersion);
+        Assert.Equal(nextEventId, entry.SourceEventId);
+        Assert.Equal(Later, entry.SourceOccurredOn);
+        Assert.Equal(waveformId, entry.WaveformId);
+        Assert.Equal(targetId, entry.TargetId);
         Assert.Equal(WaveformIndexStatus.Active, entry.Status);
     }
 
@@ -150,14 +159,13 @@ public class WaveformIndexEntryTests
         var targetId = entry.TargetId;
         var revokeEventId = Guid.NewGuid();
 
-        var result = entry.ApplyRevoked(
-            entry.Code,
-            WaveformId.New(),
-            WaveformTargetType.Voice,
-            Guid.NewGuid(),
-            entry.LayoutVersion,
-            SameInstant,
-            revokeEventId);
+        var result = entry.ApplyRevoked(Fact(
+            code: entry.Code,
+            waveformId: WaveformId.New(),
+            targetType: WaveformTargetType.Voice,
+            layoutVersion: 2,
+            occurredOn: SameInstant,
+            eventId: revokeEventId));
 
         Assert.Equal(IndexApplyResult.Applied, result);
         Assert.Equal(WaveformIndexStatus.Revoked, entry.Status);
@@ -167,6 +175,7 @@ public class WaveformIndexEntryTests
         Assert.Equal(waveformId, entry.WaveformId);
         Assert.Equal(targetType, entry.TargetType);
         Assert.Equal(targetId, entry.TargetId);
+        Assert.Equal(LayoutVersion.Version1, entry.LayoutVersion);
     }
 
     [Fact]
@@ -175,14 +184,7 @@ public class WaveformIndexEntryTests
         var revoked = RevokedEntry(SameInstant);
         var eventId = revoked.SourceEventId;
 
-        var result = revoked.ApplyRegistered(
-            revoked.Code,
-            revoked.WaveformId,
-            revoked.TargetType,
-            revoked.TargetId,
-            revoked.LayoutVersion,
-            SameInstant,
-            Guid.NewGuid());
+        var result = revoked.ApplyRegistered(FactFor(revoked));
 
         Assert.Equal(IndexApplyResult.IgnoredConflict, result);
         Assert.Equal(WaveformIndexStatus.Revoked, revoked.Status);
@@ -197,14 +199,13 @@ public class WaveformIndexEntryTests
         var targetId = revoked.TargetId;
         var nextEventId = Guid.NewGuid();
 
-        var result = revoked.ApplyRevoked(
-            revoked.Code,
-            WaveformId.New(),
-            WaveformTargetType.Voice,
-            Guid.NewGuid(),
-            revoked.LayoutVersion,
-            Later,
-            nextEventId);
+        var result = revoked.ApplyRevoked(Fact(
+            code: revoked.Code,
+            waveformId: WaveformId.New(),
+            targetType: WaveformTargetType.Voice,
+            layoutVersion: 2,
+            occurredOn: Later,
+            eventId: nextEventId));
 
         Assert.Equal(IndexApplyResult.Applied, result);
         Assert.Equal(WaveformIndexStatus.Revoked, revoked.Status);
@@ -212,6 +213,7 @@ public class WaveformIndexEntryTests
         Assert.Equal(Later, revoked.SourceOccurredOn);
         Assert.Equal(waveformId, revoked.WaveformId);
         Assert.Equal(targetId, revoked.TargetId);
+        Assert.Equal(LayoutVersion.Version1, revoked.LayoutVersion);
     }
 
     [Fact]
@@ -220,18 +222,32 @@ public class WaveformIndexEntryTests
         var entry = Entry(SameInstant);
         var eventId = entry.SourceEventId;
 
-        var result = entry.ApplyRegistered(
-            entry.Code,
-            entry.WaveformId,
-            entry.TargetType,
-            entry.TargetId,
-            entry.LayoutVersion,
-            SameInstant,
-            Guid.NewGuid());
+        var result = entry.ApplyRegistered(FactFor(entry, layoutVersion: 2));
 
         Assert.Equal(IndexApplyResult.Unchanged, result);
         Assert.Equal(eventId, entry.SourceEventId);
         Assert.Equal(WaveformIndexStatus.Active, entry.Status);
+        Assert.Equal(LayoutVersion.Version1, entry.LayoutVersion);
+    }
+
+    [Fact]
+    public void Newer_register_with_the_same_event_id_does_not_move_the_row()
+    {
+        var entry = Entry();
+        var occurredOn = entry.SourceOccurredOn;
+        var eventId = entry.SourceEventId;
+
+        var result = entry.ApplyRegistered(FactFor(
+            entry,
+            layoutVersion: 2,
+            occurredOn: Later,
+            eventId: eventId));
+
+        Assert.Equal(IndexApplyResult.Unchanged, result);
+        Assert.Equal(occurredOn, entry.SourceOccurredOn);
+        Assert.Equal(eventId, entry.SourceEventId);
+        Assert.Equal(LayoutVersion.Version1, entry.LayoutVersion);
+        Assert.True(entry.IsActive);
     }
 
     [Fact]
@@ -239,14 +255,7 @@ public class WaveformIndexEntryTests
     {
         var entry = Entry(SameInstant);
 
-        var result = entry.ApplyRevoked(
-            entry.Code,
-            entry.WaveformId,
-            entry.TargetType,
-            entry.TargetId,
-            entry.LayoutVersion,
-            Earlier,
-            entry.SourceEventId);
+        var result = entry.ApplyRevoked(FactFor(entry, occurredOn: Earlier, eventId: entry.SourceEventId));
 
         Assert.Equal(IndexApplyResult.IgnoredStale, result);
         Assert.Equal(SameInstant, entry.SourceOccurredOn);
@@ -258,22 +267,20 @@ public class WaveformIndexEntryTests
     {
         var code = WaveformCode.From(42);
         var waveformId = WaveformId.New();
-        var targetId = Guid.NewGuid();
 
-        Assert.Throws<ArgumentException>(() => Register(code, waveformId, eventId: Guid.Empty));
-        Assert.Throws<ArgumentException>(() => Revoke(code, waveformId, eventId: Guid.Empty));
+        Assert.Throws<ArgumentException>(() => Fact(code: code, waveformId: waveformId, eventId: Guid.Empty));
         Assert.Throws<InvalidWaveformTargetException>(() =>
-            Register(code, waveformId, targetType: (WaveformTargetType)99));
+            Fact(code: code, waveformId: waveformId, targetType: (WaveformTargetType)99));
         Assert.Throws<InvalidWaveformTargetException>(() =>
-            Register(code, waveformId, targetId: Guid.Empty));
+            Fact(code: code, waveformId: waveformId, targetId: Guid.Empty));
         Assert.Throws<InvalidLayoutVersionException>(() =>
-            Register(code, waveformId, layoutVersion: 0));
+            Fact(code: code, waveformId: waveformId, layoutVersion: 0));
     }
 
     [Fact]
     public void Register_stores_a_layout_newer_than_version_1()
     {
-        var entry = Register(WaveformCode.From(42), WaveformId.New(), layoutVersion: 2);
+        var entry = WaveformIndexEntry.Register(Fact(layoutVersion: 2));
 
         Assert.Equal(2, entry.LayoutVersion);
         Assert.True(entry.IsActive);
@@ -285,13 +292,7 @@ public class WaveformIndexEntryTests
         var entry = Entry();
 
         Assert.Throws<ArgumentException>(() => entry.ApplyRegistered(
-            WaveformCode.From(99),
-            entry.WaveformId,
-            entry.TargetType,
-            entry.TargetId,
-            entry.LayoutVersion,
-            Later,
-            Guid.NewGuid()));
+            Fact(code: WaveformCode.From(99), waveformId: entry.WaveformId, occurredOn: Later)));
     }
 
     [Fact]
@@ -300,7 +301,7 @@ public class WaveformIndexEntryTests
         var entry = Entry();
         var local = DateTime.SpecifyKind(Later, DateTimeKind.Local);
 
-        var ex = Assert.Throws<ArgumentException>(() => entry.ApplyRevoked(
+        var ex = Assert.Throws<ArgumentException>(() => WaveformFact.Create(
             entry.Code,
             entry.WaveformId,
             entry.TargetType,
@@ -314,39 +315,41 @@ public class WaveformIndexEntryTests
     }
 
     private static WaveformIndexEntry Entry(DateTime? occurredOn = null)
-        => Register(WaveformCode.From(42), WaveformId.New(), occurredOn: occurredOn ?? SameInstant);
+        => WaveformIndexEntry.Register(Fact(occurredOn: occurredOn ?? SameInstant));
 
     private static WaveformIndexEntry RevokedEntry(DateTime occurredOn)
-        => Revoke(WaveformCode.From(42), WaveformId.New(), occurredOn: occurredOn);
+        => WaveformIndexEntry.RevokeFirst(Fact(occurredOn: occurredOn));
 
-    private static WaveformIndexEntry Register(
-        WaveformCode code,
-        WaveformId waveformId,
+    private static WaveformFact FactFor(
+        WaveformIndexEntry entry,
+        WaveformTargetType? targetType = null,
+        Guid? targetId = null,
+        int? layoutVersion = null,
+        DateTime? occurredOn = null,
+        Guid? eventId = null)
+        => Fact(
+            code: entry.Code,
+            waveformId: entry.WaveformId,
+            targetType: targetType ?? entry.TargetType,
+            targetId: targetId ?? entry.TargetId,
+            layoutVersion: layoutVersion ?? entry.LayoutVersion,
+            occurredOn: occurredOn ?? entry.SourceOccurredOn,
+            eventId: eventId);
+
+    private static WaveformFact Fact(
+        WaveformCode? code = null,
+        WaveformId? waveformId = null,
         WaveformTargetType targetType = WaveformTargetType.Page,
         Guid? targetId = null,
         int layoutVersion = LayoutVersion.Version1,
         DateTime? occurredOn = null,
         Guid? eventId = null)
-        => WaveformIndexEntry.Register(
-            code,
-            waveformId,
+        => WaveformFact.Create(
+            code ?? WaveformCode.From(42),
+            waveformId ?? WaveformId.New(),
             targetType,
             targetId ?? Guid.NewGuid(),
             layoutVersion,
-            occurredOn ?? SameInstant,
-            eventId ?? Guid.NewGuid());
-
-    private static WaveformIndexEntry Revoke(
-        WaveformCode code,
-        WaveformId waveformId,
-        Guid? eventId = null,
-        DateTime? occurredOn = null)
-        => WaveformIndexEntry.RevokeFirst(
-            code,
-            waveformId,
-            WaveformTargetType.Page,
-            Guid.NewGuid(),
-            LayoutVersion.Version1,
             occurredOn ?? SameInstant,
             eventId ?? Guid.NewGuid());
 

@@ -1,5 +1,6 @@
 using Shenok.Back.RecognitionService.Domain.Aggregates.WaveformIndex;
 using Shenok.Back.RecognitionService.Domain.Exceptions;
+using Shenok.Back.RecognitionService.Domain.Repositories;
 
 namespace Shenok.Back.RecognitionService.Domain.Tests;
 
@@ -34,6 +35,13 @@ public class WaveformIndexValueTests
     {
         Assert.NotEqual(IndexApplyResult.Applied, default(IndexApplyResult));
         Assert.NotEqual(IndexApplyOutcome.Applied, default(IndexApplyResult).Outcome);
+    }
+
+    [Fact]
+    public void Inbox_message_type_names_are_the_column_values()
+    {
+        Assert.Equal("WaveformRegistered", WaveformMessageType.WaveformRegistered.ToString());
+        Assert.Equal("WaveformRevoked", WaveformMessageType.WaveformRevoked.ToString());
     }
 
     [Fact]

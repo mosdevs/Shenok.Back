@@ -8,5 +8,5 @@ public interface IInbox
 {
     Task<bool> ExistsAsync(Guid eventId, CancellationToken ct = default);
 
-    Task AddAsync(Guid eventId, string messageType, DateTime receivedOn, CancellationToken ct = default);
+    Task AddAsync(Guid eventId, WaveformMessageType messageType, DateTime receivedOn, CancellationToken ct = default);
 }
