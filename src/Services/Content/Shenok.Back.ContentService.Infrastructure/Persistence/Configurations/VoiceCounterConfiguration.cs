@@ -6,7 +6,7 @@ using Shenok.Back.ContentService.Domain.Aggregates.Voices;
 namespace Shenok.Back.ContentService.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Schema only. Phase 6 updates <see cref="VoiceCounter.PlayCount"/> with guarded SQL.
+/// Zero row inserted with the voice. Phase 6 updates <see cref="VoiceCounter.PlayCount"/> with guarded SQL.
 /// </summary>
 public sealed class VoiceCounterConfiguration : IEntityTypeConfiguration<VoiceCounter>
 {

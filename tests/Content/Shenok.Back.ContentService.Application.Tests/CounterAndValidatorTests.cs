@@ -17,6 +17,7 @@ using Shenok.Back.ContentService.Application.Voices.UseCases.PackageVoice;
 using Shenok.Back.ContentService.Application.Voices.UseCases.UpdateVoiceTitle;
 using Shenok.Back.ContentService.Application.Voices.UseCases.UploadVoice;
 using Shenok.Back.ContentService.Application.Waveforms.UseCases.RegisterWaveform;
+using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 using Shenok.Back.ContentService.Domain.Aggregates.Voices;
 using Shenok.Back.ContentService.Domain.Aggregates.WaveformMappings;
 
@@ -28,20 +29,32 @@ public class CounterAndValidatorTests
     public async Task Unfollow_and_play_commands_are_accepted_then_left_unchanged()
     {
         var caller = new FakeCaller { IsInternalService = true };
-        var subscribers = new ApplySubscriberDeltaUseCase(caller);
-        var plays = new IncrementPlayCountUseCase(caller);
+        var page = Page.CreateDraft(OwnerId.New(), PageTitle.Create("Show"), PageDescription.Create(null), null);
+        var voice = Voice.CreatePending(page.Id, VoiceTitle.Create("Episode"), "sources/a", "audio/wav", 10);
+        var pages = new FakePages();
+        var voiceStore = new FakeVoices();
+        await pages.AddAsync(page);
+        voiceStore.Add(voice);
+        var subscribers = new ApplySubscriberDeltaUseCase(caller, pages);
+        var plays = new IncrementPlayCountUseCase(caller, voiceStore);
 
         await Assert.ThrowsAsync<CounterUpdateDeferredException>(() =>
+            subscribers.ExecuteAsync(
+                new ApplySubscriberDeltaRequest(page.Id.Value, -1, $"{Guid.NewGuid():D}:{Guid.NewGuid():D}"),
+                CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             subscribers.ExecuteAsync(
                 new ApplySubscriberDeltaRequest(Guid.NewGuid(), -1, $"{Guid.NewGuid():D}:{Guid.NewGuid():D}"),
                 CancellationToken.None));
         await Assert.ThrowsAsync<ConflictException>(() =>
-            subscribers.ExecuteAsync(new ApplySubscriberDeltaRequest(Guid.NewGuid(), -1, "bad key"), CancellationToken.None));
+            subscribers.ExecuteAsync(new ApplySubscriberDeltaRequest(page.Id.Value, -1, "bad key"), CancellationToken.None));
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            plays.ExecuteAsync(new IncrementPlayCountRequest(Guid.NewGuid(), Guid.Empty), CancellationToken.None));
+            plays.ExecuteAsync(new IncrementPlayCountRequest(voice.Id.Value, Guid.Empty), CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            plays.ExecuteAsync(new IncrementPlayCountRequest(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None));
         await Assert.ThrowsAsync<ForbiddenException>(() =>
-            new IncrementPlayCountUseCase(new FakeCaller()).ExecuteAsync(
-                new IncrementPlayCountRequest(Guid.NewGuid(), Guid.NewGuid()),
+            new IncrementPlayCountUseCase(new FakeCaller(), voiceStore).ExecuteAsync(
+                new IncrementPlayCountRequest(voice.Id.Value, Guid.NewGuid()),
                 CancellationToken.None));
     }
 

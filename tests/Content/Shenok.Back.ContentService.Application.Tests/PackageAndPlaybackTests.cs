@@ -121,17 +121,18 @@ public class PackageAndPlaybackTests
     }
 
     [Fact]
-    public async Task A_new_scan_of_an_archived_page_is_rejected_and_a_non_scan_play_still_signs()
+    public async Task Archived_playback_is_rejected_with_or_without_a_scan()
     {
         var (useCase, blobs, voice, mapping) = await PlaybackScene(archive: true);
 
-        await Assert.ThrowsAsync<ForbiddenException>(() =>
+        var scan = await Assert.ThrowsAsync<ForbiddenException>(() =>
             useCase.ExecuteAsync(new IssuePlaylistRequest(voice.Id.Value, mapping.Id.Value), CancellationToken.None));
-        Assert.Equal(0, blobs.Reads);
+        var open = await Assert.ThrowsAsync<ForbiddenException>(() =>
+            useCase.ExecuteAsync(new IssuePlaylistRequest(voice.Id.Value, null), CancellationToken.None));
 
-        var issued = await useCase.ExecuteAsync(new IssuePlaylistRequest(voice.Id.Value, null), CancellationToken.None);
-        Assert.Contains("sig=", issued.Playlist, StringComparison.Ordinal);
-        Assert.Equal(1, blobs.Reads);
+        Assert.Equal("Archived pages are hidden from playback.", scan.Message);
+        Assert.Equal("Archived pages are hidden from playback.", open.Message);
+        Assert.Equal(0, blobs.Reads);
     }
 
     [Fact]

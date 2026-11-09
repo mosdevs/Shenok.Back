@@ -3,6 +3,8 @@ using Shenok.Back.Application.Abstractions;
 using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.ContentService.Application.Common;
 using Shenok.Back.ContentService.Application.Common.Interfaces;
+using Shenok.Back.ContentService.Domain.Aggregates.Pages;
+using Shenok.Back.ContentService.Domain.Repositories;
 
 namespace Shenok.Back.ContentService.Application.Counters.UseCases.ApplySubscriberDelta;
 
@@ -21,12 +23,12 @@ public sealed class ApplySubscriberDeltaValidator : AbstractValidator<ApplySubsc
 }
 
 /// <summary>
-/// Phase 2 reserves the follow and unfollow command. The counter row is not loaded and is not changed.
+/// Phase 6 applies the subscriber change. A missing page is rejected first. The count is not changed.
 /// </summary>
-public sealed class ApplySubscriberDeltaUseCase(IContentCaller caller)
+public sealed class ApplySubscriberDeltaUseCase(IContentCaller caller, IPageRepository pages)
     : IUseCase<ApplySubscriberDeltaRequest, ApplySubscriberDeltaResponse>
 {
-    public Task<ApplySubscriberDeltaResponse> ExecuteAsync(
+    public async Task<ApplySubscriberDeltaResponse> ExecuteAsync(
         ApplySubscriberDeltaRequest request,
         CancellationToken cancellationToken)
     {
@@ -37,6 +39,8 @@ public sealed class ApplySubscriberDeltaUseCase(IContentCaller caller)
             throw new ConflictException("Subscriber delta must be 1 or -1.");
 
         IdempotencyKey.Require(request.IdempotencyKey);
+        _ = await pages.GetByIdAsync(PageId.From(request.PageId), cancellationToken)
+            ?? throw new NotFoundException("Page was not found.");
         throw new CounterUpdateDeferredException();
     }
 }

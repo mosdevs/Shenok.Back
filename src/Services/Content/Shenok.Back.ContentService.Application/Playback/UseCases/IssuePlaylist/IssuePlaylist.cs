@@ -50,6 +50,8 @@ public sealed class IssuePlaylistUseCase(
         var page = await ContentMaps.RequirePageAsync(pages, voice.PageId.Value, cancellationToken);
         if (!page.VoiceIds.Contains(voice.Id))
             throw new ForbiddenException("Voice is not on the page.");
+        if (page.Status == PageStatus.Archived)
+            throw new ForbiddenException("Archived pages are hidden from playback.");
 
         if (request.WaveformId is Guid waveformId)
             await EnsureActiveScanAsync(page, voice.Id.Value, waveformId, cancellationToken);
@@ -85,8 +87,5 @@ public sealed class IssuePlaylistUseCase(
         var targetsPage = mapping.TargetType == WaveformTargetType.Page && mapping.TargetId == page.Id.Value;
         if (!targetsVoice && !targetsPage)
             throw new ForbiddenException("Waveform does not target this voice.");
-
-        if (page.Status == PageStatus.Archived)
-            throw new ForbiddenException("Archived pages are hidden from new scans.");
     }
 }

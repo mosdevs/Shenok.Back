@@ -6,7 +6,7 @@ using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 namespace Shenok.Back.ContentService.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Schema only. Phase 6 updates <see cref="PageCounter.SubscriberCount"/> with guarded SQL.
+/// Zero row inserted with the page. Phase 6 updates <see cref="PageCounter.SubscriberCount"/> with guarded SQL.
 /// </summary>
 public sealed class PageCounterConfiguration : IEntityTypeConfiguration<PageCounter>
 {

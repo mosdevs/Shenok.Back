@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shenok.Back.Application.Abstractions.Exceptions;
+using Shenok.Back.ContentService.Domain.Aggregates.Counters;
 using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 using Shenok.Back.ContentService.Domain.Aggregates.Voices;
 using Shenok.Back.ContentService.Domain.Aggregates.WaveformMappings;
@@ -84,6 +85,8 @@ public sealed class RepositoryPersistenceTests(InfrastructureFixture fixture)
         Assert.Equal(page.Title.Value, stored.Title.Value);
         Assert.Equal(page.OwnerId.Value, stored.OwnerId.Value);
         Assert.Equal(PageStatus.Draft, stored.Status);
+        var counter = await read.PageCounters.AsNoTracking().SingleAsync(item => item.PageId == page.Id);
+        Assert.Equal(0, counter.SubscriberCount);
     }
 
     [Fact]
@@ -199,6 +202,14 @@ public sealed class RepositoryPersistenceTests(InfrastructureFixture fixture)
             Assert.Contains(listed, voice => voice.Id == pending.Id && voice.Status == PackagingStatus.Pending && voice.DurationSeconds is null);
             Assert.Contains(listed, voice => voice.Id == ready.Id && voice.Status == PackagingStatus.Ready && voice.DurationSeconds == 12.5);
             Assert.Contains(listed, voice => voice.Id == failed.Id && voice.Status == PackagingStatus.Failed);
+        }
+
+        await using (var counters = fixture.CreateBareContext())
+        {
+            var pageCounter = await counters.PageCounters.AsNoTracking().SingleAsync(item => item.PageId == page.Id);
+            var voiceCounter = await counters.VoiceCounters.AsNoTracking().SingleAsync(item => item.VoiceId == pending.Id);
+            Assert.Equal(0, pageCounter.SubscriberCount);
+            Assert.Equal(0, voiceCounter.PlayCount);
         }
 
         failed.RetryPackagingSuccess(8, $"packages/{Guid.NewGuid():N}/index.m3u8", $"packages/{Guid.NewGuid():N}/");

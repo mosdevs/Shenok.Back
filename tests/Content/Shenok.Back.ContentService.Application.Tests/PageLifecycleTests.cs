@@ -70,8 +70,9 @@ public class PageLifecycleTests
         var (pages, voices) = await ApplicationScenes.Store(page);
         var stranger = new GetPageUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices);
 
-        await Assert.ThrowsAsync<ForbiddenException>(() =>
+        var denied = await Assert.ThrowsAsync<ForbiddenException>(() =>
             stranger.ExecuteAsync(new GetPageRequest(page.Id.Value), CancellationToken.None));
+        Assert.Equal("You cannot view this page.", denied.Message);
         await Assert.ThrowsAsync<NotFoundException>(() =>
             stranger.ExecuteAsync(new GetPageRequest(Guid.NewGuid()), CancellationToken.None));
         await Assert.ThrowsAsync<NotFoundException>(() =>
@@ -101,8 +102,9 @@ public class PageLifecycleTests
         var unit = new FakeUnitOfWork();
         var stranger = new UpdatePageMetadataUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices, unit);
 
-        await Assert.ThrowsAsync<ForbiddenException>(() =>
+        var denied = await Assert.ThrowsAsync<ForbiddenException>(() =>
             stranger.ExecuteAsync(new UpdatePageMetadataRequest(page.Id.Value, "Stolen", null, null), CancellationToken.None));
+        Assert.Equal("You cannot change this page.", denied.Message);
         Assert.Equal(0, unit.Saves);
 
         page.Archive();
@@ -172,6 +174,24 @@ public class PageLifecycleTests
         var stranger = new PublishPageUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices, unit);
         await Assert.ThrowsAsync<ForbiddenException>(() =>
             stranger.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
+        Assert.Equal(0, unit.Saves);
+        Assert.Equal(PageStatus.Draft, page.Status);
+    }
+
+    [Fact]
+    public async Task Publish_names_voices_that_were_uploaded_but_not_added_to_the_order()
+    {
+        var owner = new FakeCaller();
+        var page = ApplicationScenes.Draft(owner);
+        var loose = ApplicationScenes.Pending(page);
+        var (pages, voices) = await ApplicationScenes.Store(page, loose);
+        var unit = new FakeUnitOfWork();
+        var useCase = new PublishPageUseCase(owner, pages, voices, unit);
+
+        var exception = await Assert.ThrowsAsync<VoicesNotInEpisodeOrderException>(() =>
+            useCase.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
+
+        Assert.Contains("not in the episode order", exception.Message, StringComparison.Ordinal);
         Assert.Equal(0, unit.Saves);
         Assert.Equal(PageStatus.Draft, page.Status);
     }

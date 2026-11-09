@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shenok.Back.ContentService.Domain.Aggregates.Counters;
 using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 using Shenok.Back.ContentService.Domain.Repositories;
 
@@ -6,10 +7,11 @@ namespace Shenok.Back.ContentService.Infrastructure.Persistence.Repositories;
 
 public sealed class PageRepository(ContentDbContext db) : IPageRepository
 {
-    public Task AddAsync(Page page, CancellationToken ct = default)
+    public async Task AddAsync(Page page, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(page);
-        return db.Pages.AddAsync(page, ct).AsTask();
+        await db.Pages.AddAsync(page, ct);
+        await db.PageCounters.AddAsync(PageCounter.Create(page.Id), ct);
     }
 
     public Task<Page?> GetByIdAsync(PageId id, CancellationToken ct = default)

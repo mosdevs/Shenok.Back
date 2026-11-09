@@ -16,7 +16,18 @@ internal static class PageAccess
         throw new ForbiddenException("Only a content creator or an admin can create a page.");
     }
 
-    public static void EnsureCanMutate(Page page, IContentCaller caller)
+    public static void EnsureCanMutate(Page page, IContentCaller caller) =>
+        EnsureOwnerOrAdmin(page, caller, "You cannot change this page.");
+
+    public static void EnsureCanRead(Page page, IContentCaller caller)
+    {
+        if (caller.IsInternalService)
+            return;
+
+        EnsureOwnerOrAdmin(page, caller, "You cannot view this page.");
+    }
+
+    private static void EnsureOwnerOrAdmin(Page page, IContentCaller caller, string deniedMessage)
     {
         RequireUser(caller);
         if (caller.IsAdmin)
@@ -28,16 +39,8 @@ internal static class PageAccess
         }
         catch (NotPageOwnerException)
         {
-            throw new ForbiddenException("You cannot change this page.");
+            throw new ForbiddenException(deniedMessage);
         }
-    }
-
-    public static void EnsureCanRead(Page page, IContentCaller caller)
-    {
-        if (caller.IsInternalService)
-            return;
-
-        EnsureCanMutate(page, caller);
     }
 
     public static void EnsureInternal(IContentCaller caller)

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shenok.Back.ContentService.Domain.Aggregates.Counters;
 using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 using Shenok.Back.ContentService.Domain.Aggregates.Voices;
 using Shenok.Back.ContentService.Domain.Repositories;
@@ -7,10 +8,11 @@ namespace Shenok.Back.ContentService.Infrastructure.Persistence.Repositories;
 
 public sealed class VoiceRepository(ContentDbContext db) : IVoiceRepository
 {
-    public Task AddAsync(Voice voice, CancellationToken ct = default)
+    public async Task AddAsync(Voice voice, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(voice);
-        return db.Voices.AddAsync(voice, ct).AsTask();
+        await db.Voices.AddAsync(voice, ct);
+        await db.VoiceCounters.AddAsync(VoiceCounter.Create(voice.Id), ct);
     }
 
     public Task<Voice?> GetByIdAsync(VoiceId id, CancellationToken ct = default)

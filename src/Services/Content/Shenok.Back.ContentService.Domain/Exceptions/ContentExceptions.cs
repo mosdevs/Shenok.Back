@@ -78,6 +78,17 @@ public sealed class PageHasNoVoicesException : DomainException
     }
 }
 
+public sealed class VoicesNotInEpisodeOrderException : DomainException
+{
+    public PageId PageId { get; }
+
+    public VoicesNotInEpisodeOrderException(PageId pageId)
+        : base($"Page {pageId} has voices that are not in the episode order.")
+    {
+        PageId = pageId;
+    }
+}
+
 public sealed class VoiceNotReadyForPublishException : DomainException
 {
     public VoiceId VoiceId { get; }

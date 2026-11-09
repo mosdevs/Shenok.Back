@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj": {}
+    "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj": {}
   },
   "projects": {
-    "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
         "projectName": "Shenok.Back.ContentService.Api",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -34,14 +34,14 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
               },
-              "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj"
               },
-              "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj"
               }
             }
           }
@@ -515,14 +515,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
         "projectName": "Shenok.Back.ContentService.Application",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -545,14 +545,14 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
               },
-              "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
               },
-              "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj"
               }
             }
           }
@@ -877,14 +877,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj",
         "projectName": "Shenok.Back.ContentService.Domain",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -907,8 +907,8 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj"
               }
             }
           }
@@ -1223,14 +1223,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
         "projectName": "Shenok.Back.ContentService.Infrastructure",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1253,11 +1253,11 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
               },
-              "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Domain\\Shenok.Back.ContentService.Domain.csproj"
               }
             }
           }
@@ -1747,14 +1747,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
         "projectName": "Shenok.Back.Api.Shared",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1777,11 +1777,11 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj"
               },
-              "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj": {
-                "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj"
+              "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj": {
+                "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj"
               }
             }
           }
@@ -2245,14 +2245,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
         "projectName": "Shenok.Back.Application.Abstractions",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2593,14 +2593,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj",
         "projectName": "Shenok.Back.SharedKernel",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\Shenok.Back.SharedKernel.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.SharedKernel\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2935,14 +2935,14 @@
         }
       }
     },
-    "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
+    "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
+        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
         "projectName": "Shenok.Back.WaveformCodec",
-        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
-        "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\obj\\",
+        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\Shenok.Back.WaveformCodec.csproj",
+        "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.WaveformCodec\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
