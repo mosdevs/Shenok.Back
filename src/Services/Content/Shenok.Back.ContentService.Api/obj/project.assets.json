@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net10.0": {
       "Akka/1.5.74": {
@@ -152,22 +152,6 @@
         },
         "runtime": {
           "lib/net8.0/FluentValidation.dll": {
-            "related": ".xml"
-          }
-        }
-      },
-      "FluentValidation.DependencyInjectionExtensions/12.1.1": {
-        "type": "package",
-        "dependencies": {
-          "FluentValidation": "12.1.1"
-        },
-        "compile": {
-          "lib/net8.0/FluentValidation.DependencyInjectionExtensions.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net8.0/FluentValidation.DependencyInjectionExtensions.dll": {
             "related": ".xml"
           }
         }
@@ -1225,40 +1209,12 @@
           }
         }
       },
-      "Shenok.Back.Api.Shared/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v10.0",
-        "dependencies": {
-          "FluentValidation.DependencyInjectionExtensions": "12.1.1",
-          "Shenok.Back.Application.Abstractions": "1.0.0",
-          "Shenok.Back.SharedKernel": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/Shenok.Back.Api.Shared.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/Shenok.Back.Api.Shared.dll": {}
-        },
-        "frameworkReferences": [
-          "Microsoft.AspNetCore.App"
-        ]
-      },
-      "Shenok.Back.Application.Abstractions/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v10.0",
-        "compile": {
-          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
-        }
-      },
       "Shenok.Back.ContentService.Application/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
+          "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": "1.0.0",
           "FluentValidation": "12.1.1",
-          "Shenok.Back.Application.Abstractions": "1.0.0",
           "Shenok.Back.ContentService.Domain": "1.0.0",
           "Shenok.Back.WaveformCodec": "1.0.0"
         },
@@ -1522,21 +1478,6 @@
         "fluentvalidation.nuspec",
         "lib/net8.0/FluentValidation.dll",
         "lib/net8.0/FluentValidation.xml"
-      ]
-    },
-    "FluentValidation.DependencyInjectionExtensions/12.1.1": {
-      "sha512": "D0VXh4dtjjX2aQizuaa0g6R8X3U1JaVqJPfGCvLwZX9t/O2h7tkpbitbadQMfwcgSPdDbI2vDxuwRMv/Uf9dHA==",
-      "type": "package",
-      "path": "fluentvalidation.dependencyinjectionextensions/12.1.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "README.md",
-        "fluent-validation-icon.png",
-        "fluentvalidation.dependencyinjectionextensions.12.1.1.nupkg.sha512",
-        "fluentvalidation.dependencyinjectionextensions.nuspec",
-        "lib/net8.0/FluentValidation.DependencyInjectionExtensions.dll",
-        "lib/net8.0/FluentValidation.DependencyInjectionExtensions.xml"
       ]
     },
     "Google.Protobuf/3.26.1": {
@@ -3886,16 +3827,6 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Shenok.Back.Api.Shared/1.0.0": {
-      "type": "project",
-      "path": "../../../Shared/Shenok.Back.Api.Shared/Shenok.Back.Api.Shared.csproj",
-      "msbuildProject": "../../../Shared/Shenok.Back.Api.Shared/Shenok.Back.Api.Shared.csproj"
-    },
-    "Shenok.Back.Application.Abstractions/1.0.0": {
-      "type": "project",
-      "path": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj",
-      "msbuildProject": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj"
-    },
     "Shenok.Back.ContentService.Application/1.0.0": {
       "type": "project",
       "path": "../Shenok.Back.ContentService.Application/Shenok.Back.ContentService.Application.csproj",
@@ -3924,32 +3855,32 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.14",
       "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore >= 10.0.11",
-      "Shenok.Back.Api.Shared >= 1.0.0",
       "Shenok.Back.ContentService.Application >= 1.0.0",
       "Shenok.Back.ContentService.Infrastructure >= 1.0.0",
       "Swashbuckle.AspNetCore >= 10.3.1"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Rivas\\.nuget\\packages\\": {},
+    "C:\\Users\\mosta\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
+      "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
       "projectName": "Shenok.Back.ContentService.Api",
-      "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
-      "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
-      "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
+      "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
+      "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
+      "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Rivas\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\mosta\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -3963,17 +3894,16 @@
       },
       "frameworks": {
         "net10.0": {
-          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
-              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
+            "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
+              "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
             },
-            "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
-              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj"
+            "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
+              "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj"
             },
-            "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
-              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj"
+            "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
+              "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj"
             }
           }
         }
@@ -3988,11 +3918,10 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.400"
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net10.0": {
-        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "Microsoft.EntityFrameworkCore.Design": {
@@ -4029,7 +3958,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
@@ -4446,5 +4375,25 @@
         }
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1105",
+      "level": "Error",
+      "message": "Unable to find project information for 'D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj'. If you are using Visual Studio, this may be because the project is unloaded or not part of the current solution so run a restore from the command-line. Otherwise, the project file may be invalid or missing targets required for restore.",
+      "libraryId": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1105",
+      "level": "Error",
+      "message": "Unable to find project information for 'D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj'. If you are using Visual Studio, this may be because the project is unloaded or not part of the current solution so run a restore from the command-line. Otherwise, the project file may be invalid or missing targets required for restore.",
+      "libraryId": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }
