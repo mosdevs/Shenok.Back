@@ -5,6 +5,7 @@ using Shenok.Back.Application.Abstractions.Security;
 using Shenok.Back.IdentityService.Application.Common;
 using Shenok.Back.IdentityService.Application.Common.Interfaces;
 using Shenok.Back.IdentityService.Domain.Aggregates.Otps;
+using Shenok.Back.IdentityService.Domain.Aggregates.Users;
 using Shenok.Back.IdentityService.Domain.Repositories;
 
 namespace Shenok.Back.IdentityService.Application.Auth.UseCases.ConfirmOtp;
@@ -34,8 +35,10 @@ public sealed class ConfirmOtpUseCase(
         var lookup = new RequestOtp.RequestOtpRequest(request.Email, request.PhoneNumber, request.Purpose);
         var user = await RequestOtp.RequestOtpUseCase.FindAsync(lookup, users, cancellationToken);
         var purpose = request.Purpose == "login" ? OtpPurpose.Login : OtpPurpose.Register;
-        if (purpose == OtpPurpose.Login && user.VerificationStatus != Domain.Aggregates.Users.VerificationStatus.Verified)
+        if (purpose == OtpPurpose.Login && user.VerificationStatus != VerificationStatus.Verified)
             throw new ForbiddenException("An unverified account cannot sign in with a login code.");
+        if (purpose == OtpPurpose.Register && user.VerificationStatus == VerificationStatus.Verified)
+            throw new ConflictException(RequestOtp.RequestOtpUseCase.AlreadyRegisteredMessage(request.PhoneNumber));
 
         var utcNow = clock.GetUtcNow().UtcDateTime;
         var channel = OtpRouting.ResolveChannel(request.Email, request.PhoneNumber);
@@ -44,7 +47,7 @@ public sealed class ConfirmOtpUseCase(
             ?? throw new NotFoundException("No active verification code exists.");
 
         challenge.Match(Sha256Hasher.Hash(request.Code), utcNow);
-        if (purpose == OtpPurpose.Register && user.VerificationStatus != Domain.Aggregates.Users.VerificationStatus.Verified)
+        if (purpose == OtpPurpose.Register)
             user.Verify();
 
         var issued = await tokenIssuer.IssueAsync(user, cancellationToken);

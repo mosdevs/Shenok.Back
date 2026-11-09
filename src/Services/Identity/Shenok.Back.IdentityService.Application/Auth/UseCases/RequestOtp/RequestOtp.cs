@@ -24,9 +24,13 @@ public sealed class RequestOtpValidator : AbstractValidator<RequestOtpRequest>
 
 public sealed class RequestOtpUseCase(
     IUserRepository users,
+    IOtpChallengeRepository challenges,
     IUnitOfWork unitOfWork,
-    OtpIssuer otpIssuer) : IUseCase<RequestOtpRequest>
+    OtpIssuer otpIssuer,
+    TimeProvider clock) : IUseCase<RequestOtpRequest>
 {
+    private const string ActiveCodeMessage = "A verification code was already sent.";
+
     public async Task ExecuteAsync(RequestOtpRequest request, CancellationToken cancellationToken)
     {
         var user = await FindAsync(request, users, cancellationToken);
@@ -34,10 +38,34 @@ public sealed class RequestOtpUseCase(
         if (purpose == OtpPurpose.Login && user.VerificationStatus != VerificationStatus.Verified)
             throw new ForbiddenException("An unverified account cannot request a login code.");
 
+        if (purpose == OtpPurpose.Register && user.VerificationStatus == VerificationStatus.Verified)
+            throw new ConflictException(AlreadyRegisteredMessage(request.PhoneNumber));
+
         var channel = OtpRouting.ResolveChannel(request.Email, request.PhoneNumber);
+        if (purpose == OtpPurpose.Register)
+            await EnsureNoActiveRegisterCodeAsync(user, channel, cancellationToken);
+
         var pending = await otpIssuer.StageAsync(user, purpose, cancellationToken, channel);
         await unitOfWork.SaveChanges(cancellationToken);
         await otpIssuer.DeliverAsync(pending, cancellationToken);
+    }
+
+    internal static string AlreadyRegisteredMessage(string? phoneNumber) =>
+        string.IsNullOrWhiteSpace(phoneNumber)
+            ? "Email is already registered."
+            : "Phone number is already registered.";
+
+    private async Task EnsureNoActiveRegisterCodeAsync(User user, OtpChannel channel, CancellationToken cancellationToken)
+    {
+        var destination = OtpRouting.ResolveDestination(user, channel);
+        var active = await challenges.GetActiveAsync(
+            user.Id,
+            OtpPurpose.Register,
+            destination,
+            clock.GetUtcNow().UtcDateTime,
+            cancellationToken);
+        if (active is not null)
+            throw new ConflictException(ActiveCodeMessage);
     }
 
     internal static async Task<User> FindAsync(RequestOtpRequest request, IUserRepository users, CancellationToken cancellationToken)

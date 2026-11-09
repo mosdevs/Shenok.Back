@@ -14,7 +14,7 @@ internal static class IdentitySwagger
             {
                 Title = "Shenok Identity",
                 Version = "v1",
-                Description = "Registration, OTP, sessions, and profiles. Send X-Internal-Key on every call except /health and /swagger."
+                Description = "Registration, OTP, sessions, and profiles. Send X-Internal-Key on every call except /health and /swagger. /users/me also needs X-User-Id."
             });
 
             options.AddSecurityDefinition("InternalKey", new OpenApiSecurityScheme
@@ -24,10 +24,18 @@ internal static class IdentitySwagger
                 In = ParameterLocation.Header,
                 Description = "Shared key forwarded by the Gateway."
             });
+            options.AddSecurityDefinition("UserId", new OpenApiSecurityScheme
+            {
+                Name = InternalCaller.UserIdHeader,
+                Type = SecuritySchemeType.ApiKey,
+                In = ParameterLocation.Header,
+                Description = "Caller id. Required for /users/me. Use the userId returned by POST /register."
+            });
 
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                [new OpenApiSecuritySchemeReference("InternalKey", document)] = []
+                [new OpenApiSecuritySchemeReference("InternalKey", document)] = [],
+                [new OpenApiSecuritySchemeReference("UserId", document)] = []
             });
         });
 

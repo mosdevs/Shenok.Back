@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Shenok.Back.IdentityService.Application.Auth;
@@ -102,6 +103,66 @@ public class IdentityApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Pending_phone_rejects_a_second_register_code_until_the_first_expires()
+    {
+        var phone = UniquePhone();
+        var username = $"ph_{Guid.NewGuid():N}"[..20];
+        var register = await _client!.PostAsJsonAsync("/register", ValidPhoneBody(phone, username));
+        Assert.Equal(HttpStatusCode.OK, register.StatusCode);
+
+        var resend = await _client.PostAsJsonAsync("/otp/request", new { phoneNumber = phone, purpose = "register" });
+        Assert.Equal(HttpStatusCode.Conflict, resend.StatusCode);
+        Assert.Equal("A verification code was already sent.", await ReadDetailAsync(resend));
+
+        await ExpireOtpChallengesAsync();
+
+        var afterExpiry = await _client.PostAsJsonAsync("/otp/request", new { phoneNumber = phone, purpose = "register" });
+        Assert.Equal(HttpStatusCode.OK, afterExpiry.StatusCode);
+
+        var sms = _factory!.Services.GetRequiredService<InMemorySmsSender>();
+        var code = ExtractOtp(sms.LatestMessage(NormalizePhone(phone))!);
+        var confirm = await _client.PostAsJsonAsync("/otp/confirm", new { phoneNumber = phone, code, purpose = "register" });
+        Assert.Equal(HttpStatusCode.OK, confirm.StatusCode);
+        var tokens = await confirm.Content.ReadFromJsonAsync<AuthTokens>();
+        Assert.Equal("true", ReadJwtClaim(tokens!.AccessToken, "verified"));
+    }
+
+    [Fact]
+    public async Task Verified_phone_register_otp_returns_already_registered()
+    {
+        var phone = UniquePhone();
+        await RegisterPhoneAndConfirmOtpAsync(phone);
+
+        var request = await _client!.PostAsJsonAsync("/otp/request", new { phoneNumber = phone, purpose = "register" });
+        Assert.Equal(HttpStatusCode.Conflict, request.StatusCode);
+        Assert.Equal("Phone number is already registered.", await ReadDetailAsync(request));
+
+        var confirm = await _client.PostAsJsonAsync("/otp/confirm", new { phoneNumber = phone, code = "000000", purpose = "register" });
+        Assert.Equal(HttpStatusCode.Conflict, confirm.StatusCode);
+        Assert.Equal("Phone number is already registered.", await ReadDetailAsync(confirm));
+
+        var loginCode = await _client.PostAsJsonAsync("/otp/request", new { phoneNumber = phone, purpose = "login" });
+        Assert.Equal(HttpStatusCode.OK, loginCode.StatusCode);
+    }
+
+    [Fact]
+    public async Task Verified_email_register_otp_returns_already_registered()
+    {
+        var email = $"mail-{Guid.NewGuid():N}@example.com";
+        var register = await _client!.PostAsJsonAsync("/register", ValidEmailBody(email, $"mail_{Guid.NewGuid():N}"[..20]));
+        Assert.Equal(HttpStatusCode.OK, register.StatusCode);
+
+        var emailSender = _factory!.Services.GetRequiredService<InMemoryEmailSender>();
+        var code = ExtractOtp(emailSender.LatestBody(email)!);
+        var confirm = await _client.PostAsJsonAsync("/otp/confirm", new { email, code, purpose = "register" });
+        Assert.Equal(HttpStatusCode.OK, confirm.StatusCode);
+
+        var request = await _client.PostAsJsonAsync("/otp/request", new { email, purpose = "register" });
+        Assert.Equal(HttpStatusCode.Conflict, request.StatusCode);
+        Assert.Equal("Email is already registered.", await ReadDetailAsync(request));
+    }
+
+    [Fact]
     public async Task Phone_register_confirm_otp_issues_verified_tokens()
     {
         var tokens = await RegisterPhoneAndConfirmOtpAsync();
@@ -144,6 +205,18 @@ public class IdentityApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Swagger_documents_the_caller_id_header()
+    {
+        var response = await _client!.GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var document = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var schemes = document.GetProperty("components").GetProperty("securitySchemes");
+        Assert.Equal("X-Internal-Key", schemes.GetProperty("InternalKey").GetProperty("name").GetString());
+        Assert.Equal("X-User-Id", schemes.GetProperty("UserId").GetProperty("name").GetString());
+        Assert.Equal("header", schemes.GetProperty("UserId").GetProperty("in").GetString());
+    }
+
+    [Fact]
     public async Task Invalid_body_uses_the_shared_problem_shape()
     {
         var response = await _client!.PostAsJsonAsync("/register", new { displayName = "" });
@@ -161,9 +234,9 @@ public class IdentityApiTests : IAsyncLifetime
             await _factory.DisposeAsync();
     }
 
-    private async Task<AuthTokens> RegisterPhoneAndConfirmOtpAsync()
+    private async Task<AuthTokens> RegisterPhoneAndConfirmOtpAsync(string? phone = null)
     {
-        var phone = UniquePhone();
+        phone ??= UniquePhone();
         var register = await _client!.PostAsJsonAsync("/register", ValidPhoneBody(phone, $"ph_{Guid.NewGuid():N}"[..20]));
         Assert.Equal(HttpStatusCode.OK, register.StatusCode);
 
@@ -193,6 +266,22 @@ public class IdentityApiTests : IAsyncLifetime
         var issued = await tokenIssuer.IssueAsync(user, CancellationToken.None);
         await unitOfWork.SaveChanges(CancellationToken.None);
         return issued.Tokens.RefreshToken;
+    }
+
+    private async Task ExpireOtpChallengesAsync()
+    {
+        var connectionString = _factory!.Services.GetRequiredService<IConfiguration>().GetConnectionString("identity");
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = new NpgsqlCommand("""UPDATE otp_challenges SET "ExpiresAt" = @expires""", connection);
+        command.Parameters.AddWithValue("expires", DateTime.UtcNow.AddMinutes(-1));
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<string?> ReadDetailAsync(HttpResponseMessage response)
+    {
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return problem.GetProperty("detail").GetString();
     }
 
     private static string ExtractOtp(string message)
