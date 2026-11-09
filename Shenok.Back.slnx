@@ -57,4 +57,5 @@
     <Project Path="tests/Identity/Shenok.Back.IdentityService.Domain.Tests/Shenok.Back.IdentityService.Domain.Tests.csproj" />
     <Project Path="tests/Identity/Shenok.Back.IdentityService.IntegrationTests/Shenok.Back.IdentityService.IntegrationTests.csproj" />
   </Folder>
+  <Project Path="src/Shared/Shenok.Back.WaveformCodec/Shenok.Back.WaveformCodec.csproj" />
 </Solution>
