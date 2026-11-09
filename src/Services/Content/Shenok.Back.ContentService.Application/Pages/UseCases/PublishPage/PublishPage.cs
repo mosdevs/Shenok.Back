@@ -22,7 +22,8 @@ public sealed class PublishPageUseCase(
     IContentCaller caller,
     IPageRepository pages,
     IVoiceRepository voices,
-    IUnitOfWork unitOfWork) : IUseCase<PublishPageRequest, PageResponse>
+    IUnitOfWork unitOfWork,
+    IPageCatalogReader catalog) : IUseCase<PublishPageRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(PublishPageRequest request, CancellationToken cancellationToken)
     {
@@ -44,6 +45,6 @@ public sealed class PublishPageUseCase(
 
         await pages.UpdateAsync(page, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return ContentMaps.ToPage(page, loaded);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

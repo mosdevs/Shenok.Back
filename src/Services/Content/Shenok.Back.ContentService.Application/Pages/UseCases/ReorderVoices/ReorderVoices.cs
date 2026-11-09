@@ -26,8 +26,8 @@ public sealed class ReorderVoicesValidator : AbstractValidator<ReorderVoicesRequ
 public sealed class ReorderVoicesUseCase(
     IContentCaller caller,
     IPageRepository pages,
-    IVoiceRepository voices,
-    IUnitOfWork unitOfWork) : IUseCase<ReorderVoicesRequest, PageResponse>
+    IUnitOfWork unitOfWork,
+    IPageCatalogReader catalog) : IUseCase<ReorderVoicesRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(ReorderVoicesRequest request, CancellationToken cancellationToken)
     {
@@ -49,6 +49,6 @@ public sealed class ReorderVoicesUseCase(
         page.ReorderVoices(order);
         await pages.UpdateAsync(page, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

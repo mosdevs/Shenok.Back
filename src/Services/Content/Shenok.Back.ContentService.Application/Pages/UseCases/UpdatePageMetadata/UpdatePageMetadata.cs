@@ -23,8 +23,8 @@ public sealed class UpdatePageMetadataValidator : AbstractValidator<UpdatePageMe
 public sealed class UpdatePageMetadataUseCase(
     IContentCaller caller,
     IPageRepository pages,
-    IVoiceRepository voices,
-    IUnitOfWork unitOfWork) : IUseCase<UpdatePageMetadataRequest, PageResponse>
+    IUnitOfWork unitOfWork,
+    IPageCatalogReader catalog) : IUseCase<UpdatePageMetadataRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(UpdatePageMetadataRequest request, CancellationToken cancellationToken)
     {
@@ -37,6 +37,6 @@ public sealed class UpdatePageMetadataUseCase(
 
         await pages.UpdateAsync(page, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

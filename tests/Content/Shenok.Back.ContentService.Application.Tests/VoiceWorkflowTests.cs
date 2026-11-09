@@ -92,7 +92,7 @@ public class VoiceWorkflowTests
         var (pages, voices) = await ApplicationScenes.Store(page, voice, foreign);
         await pages.AddAsync(other);
         var unit = new FakeUnitOfWork();
-        var useCase = new AddVoiceToPageUseCase(owner, pages, voices, unit);
+        var useCase = new AddVoiceToPageUseCase(owner, pages, voices, unit, new FakeCatalog(voices));
 
         var added = await useCase.ExecuteAsync(new AddVoiceToPageRequest(page.Id.Value, voice.Id.Value), CancellationToken.None);
         Assert.Equal([voice.Id.Value], added.Voices.Select(item => item.VoiceId).ToArray());

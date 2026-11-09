@@ -43,6 +43,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ContentDbContext>());
         services.AddScoped<ICounterLedger, PostgresCounterLedger>();
+        services.AddScoped<IPageCatalogReader, PostgresPageCatalogReader>();
         services.AddScoped<IPageRepository, PageRepository>();
         services.AddScoped<IVoiceRepository, VoiceRepository>();
         services.AddScoped<IWaveformMappingRepository, WaveformMappingRepository>();

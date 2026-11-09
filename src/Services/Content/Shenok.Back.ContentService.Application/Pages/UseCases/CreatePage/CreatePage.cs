@@ -19,7 +19,11 @@ public sealed class CreatePageValidator : AbstractValidator<CreatePageRequest>
     }
 }
 
-public sealed class CreatePageUseCase(IContentCaller caller, IPageRepository pages, IUnitOfWork unitOfWork)
+public sealed class CreatePageUseCase(
+    IContentCaller caller,
+    IPageRepository pages,
+    IUnitOfWork unitOfWork,
+    IPageCatalogReader catalog)
     : IUseCase<CreatePageRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(CreatePageRequest request, CancellationToken cancellationToken)
@@ -34,6 +38,6 @@ public sealed class CreatePageUseCase(IContentCaller caller, IPageRepository pag
 
         await pages.AddAsync(page, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return ContentMaps.ToPage(page, []);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

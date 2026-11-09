@@ -31,6 +31,19 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
+      "Shenok.Back.Application.Abstractions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.11"
+        },
+        "compile": {
+          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shenok.Back.Application.Abstractions.dll": {}
+        }
+      },
       "Shenok.Back.ContentService.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -113,6 +126,11 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Shenok.Back.Application.Abstractions/1.0.0": {
+      "type": "project",
+      "path": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj",
+      "msbuildProject": "../../../Shared/Shenok.Back.Application.Abstractions/Shenok.Back.Application.Abstractions.csproj"
+    },
     "Shenok.Back.ContentService.Domain/1.0.0": {
       "type": "project",
       "path": "../Shenok.Back.ContentService.Domain/Shenok.Back.ContentService.Domain.csproj",
@@ -131,9 +149,9 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
       "FluentValidation >= 12.1.1",
       "Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.11",
+      "Shenok.Back.Application.Abstractions >= 1.0.0",
       "Shenok.Back.ContentService.Domain >= 1.0.0",
       "Shenok.Back.WaveformCodec >= 1.0.0"
     ]
@@ -501,16 +519,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1105",
-      "level": "Error",
-      "message": "Unable to find project information for 'D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj'. If you are using Visual Studio, this may be because the project is unloaded or not part of the current solution so run a restore from the command-line. Otherwise, the project file may be invalid or missing targets required for restore.",
-      "libraryId": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }

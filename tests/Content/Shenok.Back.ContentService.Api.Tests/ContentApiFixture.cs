@@ -76,7 +76,9 @@ public sealed class ContentApiFixture : IAsyncLifetime
         builder.Services.AddSingleton<IUnitOfWork, MemoryUnitOfWork>();
         builder.Services.AddSingleton<IBlobStorage>(Blobs);
         builder.Services.AddSingleton<IAudioPackager, MemoryPackager>();
-        builder.Services.AddSingleton<ICounterLedger, MemoryCounterLedger>();
+        var counters = new MemoryCounterLedger();
+        builder.Services.AddSingleton<ICounterLedger>(counters);
+        builder.Services.AddSingleton<IPageCatalogReader>(new MemoryPageCatalogReader(Voices, counters));
 
         PackagingActorRegistered = builder.Services.Any(MentionsPackagingActor);
 

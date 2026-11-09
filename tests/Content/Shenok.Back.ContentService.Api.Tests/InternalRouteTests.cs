@@ -111,7 +111,12 @@ public sealed class InternalRouteTests(ContentApiFixture api)
 
         var catalog = await api.SendAsync(HttpMethod.Get, $"/internal/pages/{page.Id.Value:D}");
         Assert.Equal(HttpStatusCode.OK, catalog.StatusCode);
-        Assert.Equal("Published", (await ApiJson.ReadAsync(catalog)).GetProperty("status").GetString());
+        var catalogBody = await ApiJson.ReadAsync(catalog);
+        Assert.Equal("Published", catalogBody.GetProperty("status").GetString());
+        Assert.Equal(1, catalogBody.GetProperty("subscriberCount").GetInt64());
+        var listed = catalogBody.GetProperty("voices").EnumerateArray().Single();
+        Assert.Equal(voiceId, listed.GetProperty("voiceId").GetGuid());
+        Assert.Equal(1, listed.GetProperty("playCount").GetInt64());
     }
 
     [Fact]

@@ -23,7 +23,8 @@ public sealed class AddVoiceToPageUseCase(
     IContentCaller caller,
     IPageRepository pages,
     IVoiceRepository voices,
-    IUnitOfWork unitOfWork) : IUseCase<AddVoiceToPageRequest, PageResponse>
+    IUnitOfWork unitOfWork,
+    IPageCatalogReader catalog) : IUseCase<AddVoiceToPageRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(AddVoiceToPageRequest request, CancellationToken cancellationToken)
     {
@@ -47,6 +48,6 @@ public sealed class AddVoiceToPageUseCase(
 
         await pages.UpdateAsync(page, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

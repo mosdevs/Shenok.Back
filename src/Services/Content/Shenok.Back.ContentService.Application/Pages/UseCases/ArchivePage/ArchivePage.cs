@@ -19,8 +19,8 @@ public sealed class ArchivePageValidator : AbstractValidator<ArchivePageRequest>
 public sealed class ArchivePageUseCase(
     IContentCaller caller,
     IPageRepository pages,
-    IVoiceRepository voices,
-    IUnitOfWork unitOfWork) : IUseCase<ArchivePageRequest, PageResponse>
+    IUnitOfWork unitOfWork,
+    IPageCatalogReader catalog) : IUseCase<ArchivePageRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(ArchivePageRequest request, CancellationToken cancellationToken)
     {
@@ -29,6 +29,6 @@ public sealed class ArchivePageUseCase(
         page.Archive();
         await pages.UpdateAsync(page, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

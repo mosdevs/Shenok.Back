@@ -65,6 +65,27 @@ public sealed class MemoryVoices : IVoiceRepository
     }
 }
 
+internal sealed class MemoryPageCatalogReader(MemoryVoices voices, MemoryCounterLedger ledger) : IPageCatalogReader
+{
+    public async Task<PageCatalog> ReadAsync(PageId pageId, CancellationToken cancellationToken = default)
+    {
+        var loaded = await voices.ListByPageIdsAsync([pageId], cancellationToken);
+        var rows = new CatalogVoice[loaded.Count];
+        for (var i = 0; i < loaded.Count; i++)
+        {
+            var voice = loaded[i];
+            rows[i] = new CatalogVoice(
+                voice.Id.Value,
+                voice.Title.Value,
+                voice.DurationSeconds,
+                voice.Status.ToString(),
+                ledger.PlayCountOf(voice.Id.Value));
+        }
+
+        return new PageCatalog(ledger.SubscriberCountOf(pageId.Value), rows);
+    }
+}
+
 public sealed class MemoryMappings : IWaveformMappingRepository
 {
     private readonly Dictionary<Guid, WaveformMapping> _items = [];

@@ -24,6 +24,7 @@ public sealed class CreatorRouteTests(ContentApiFixture api)
         Assert.Equal(api.CreatorId, body.GetProperty("ownerId").GetGuid());
         Assert.Equal("Draft", body.GetProperty("status").GetString());
         Assert.Equal("Night Walks", body.GetProperty("title").GetString());
+        Assert.Equal(0, body.GetProperty("subscriberCount").GetInt64());
         Assert.Empty(body.GetProperty("voices").EnumerateArray());
     }
 
@@ -134,7 +135,9 @@ public sealed class CreatorRouteTests(ContentApiFixture api)
         Assert.Equal(HttpStatusCode.OK, published.StatusCode);
         var publishedBody = await ApiJson.ReadAsync(published);
         Assert.Equal("Published", publishedBody.GetProperty("status").GetString());
+        Assert.Equal(0, publishedBody.GetProperty("subscriberCount").GetInt64());
         Assert.Equal("Ready", publishedBody.GetProperty("voices")[0].GetProperty("packagingStatus").GetString());
+        Assert.Equal(0, publishedBody.GetProperty("voices")[0].GetProperty("playCount").GetInt64());
 
         var again = await api.AsCreatorAsync(HttpMethod.Post, $"/pages/{page.Id.Value:D}/publish");
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);

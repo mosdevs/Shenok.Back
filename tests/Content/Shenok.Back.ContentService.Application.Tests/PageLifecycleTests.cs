@@ -19,7 +19,7 @@ public class PageLifecycleTests
     {
         var caller = new FakeCaller { IsAdmin = true, IsContentCreator = false };
         var unit = new FakeUnitOfWork();
-        var useCase = new CreatePageUseCase(caller, new FakePages(), unit);
+        var useCase = new CreatePageUseCase(caller, new FakePages(), unit, new FakeCatalog(new FakeVoices()));
 
         var created = await useCase.ExecuteAsync(new CreatePageRequest("Night Walks", null, "https://cdn.example/cover.jpg"), CancellationToken.None);
 
@@ -33,7 +33,7 @@ public class PageLifecycleTests
     {
         var caller = new FakeCaller { UserId = Guid.Empty };
         var unit = new FakeUnitOfWork();
-        var useCase = new CreatePageUseCase(caller, new FakePages(), unit);
+        var useCase = new CreatePageUseCase(caller, new FakePages(), unit, new FakeCatalog(new FakeVoices()));
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
             useCase.ExecuteAsync(new CreatePageRequest("Night Walks", null, null), CancellationToken.None));
@@ -50,14 +50,21 @@ public class PageLifecycleTests
         page.AddVoiceReference(first.Id, first.Status);
         page.AddVoiceReference(second.Id, second.Status);
         var (pages, voices) = await ApplicationScenes.Store(page, first, second);
-        var useCase = new GetPageUseCase(owner, pages, voices);
+        var catalog = new FakeCatalog(voices);
+        catalog.SetSubscriberCount(page.Id.Value, 4);
+        catalog.SetPlayCount(first.Id.Value, 9);
+        var useCase = new GetPageUseCase(owner, pages, catalog);
 
         var loaded = await useCase.ExecuteAsync(new GetPageRequest(page.Id.Value), CancellationToken.None);
 
         Assert.Equal([first.Id.Value, second.Id.Value], loaded.Voices.Select(voice => voice.VoiceId).ToArray());
+        Assert.Equal("First", loaded.Voices[0].Title);
+        Assert.Equal(4, loaded.SubscriberCount);
+        Assert.Equal(9, loaded.Voices[0].PlayCount);
+        Assert.Equal(0, loaded.Voices[1].PlayCount);
         Assert.All(loaded.Voices, voice => Assert.Equal(nameof(PackagingStatus.Pending), voice.PackagingStatus));
 
-        var gateway = new GetPageUseCase(new FakeCaller { IsInternalService = true, IsContentCreator = false }, pages, voices);
+        var gateway = new GetPageUseCase(new FakeCaller { IsInternalService = true, IsContentCreator = false }, pages, catalog);
         var internalView = await gateway.ExecuteAsync(new GetPageRequest(page.Id.Value), CancellationToken.None);
         Assert.Equal(loaded.Voices.Select(voice => voice.VoiceId), internalView.Voices.Select(voice => voice.VoiceId));
     }
@@ -68,7 +75,7 @@ public class PageLifecycleTests
         var owner = new FakeCaller();
         var page = ApplicationScenes.Draft(owner);
         var (pages, voices) = await ApplicationScenes.Store(page);
-        var stranger = new GetPageUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices);
+        var stranger = new GetPageUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, new FakeCatalog(voices));
 
         var denied = await Assert.ThrowsAsync<ForbiddenException>(() =>
             stranger.ExecuteAsync(new GetPageRequest(page.Id.Value), CancellationToken.None));
@@ -87,7 +94,7 @@ public class PageLifecycleTests
         var voice = ApplicationScenes.Pending(page);
         page.AddVoiceReference(voice.Id, voice.Status);
         var (pages, voices) = await ApplicationScenes.Store(page);
-        var useCase = new GetPageUseCase(owner, pages, voices);
+        var useCase = new GetPageUseCase(owner, pages, new FakeCatalog(voices));
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             useCase.ExecuteAsync(new GetPageRequest(page.Id.Value), CancellationToken.None));
@@ -100,7 +107,7 @@ public class PageLifecycleTests
         var page = ApplicationScenes.Draft(owner);
         var (pages, voices) = await ApplicationScenes.Store(page);
         var unit = new FakeUnitOfWork();
-        var stranger = new UpdatePageMetadataUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices, unit);
+        var stranger = new UpdatePageMetadataUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, unit, new FakeCatalog(voices));
 
         var denied = await Assert.ThrowsAsync<ForbiddenException>(() =>
             stranger.ExecuteAsync(new UpdatePageMetadataRequest(page.Id.Value, "Stolen", null, null), CancellationToken.None));
@@ -108,7 +115,7 @@ public class PageLifecycleTests
         Assert.Equal(0, unit.Saves);
 
         page.Archive();
-        var archived = new UpdatePageMetadataUseCase(owner, pages, voices, unit);
+        var archived = new UpdatePageMetadataUseCase(owner, pages, unit, new FakeCatalog(voices));
         await Assert.ThrowsAsync<PageArchivedException>(() =>
             archived.ExecuteAsync(new UpdatePageMetadataRequest(page.Id.Value, "Still archived", null, null), CancellationToken.None));
         Assert.Equal(0, unit.Saves);
@@ -122,7 +129,7 @@ public class PageLifecycleTests
         var page = ApplicationScenes.Draft(owner);
         var (pages, voices) = await ApplicationScenes.Store(page);
         var unit = new FakeUnitOfWork();
-        var useCase = new ArchivePageUseCase(owner, pages, voices, unit);
+        var useCase = new ArchivePageUseCase(owner, pages, unit, new FakeCatalog(voices));
 
         var archived = await useCase.ExecuteAsync(new ArchivePageRequest(page.Id.Value), CancellationToken.None);
         Assert.Equal(nameof(PageStatus.Archived), archived.Status);
@@ -144,7 +151,7 @@ public class PageLifecycleTests
         page.AddVoiceReference(second.Id, second.Status);
         var (pages, voices) = await ApplicationScenes.Store(page, first, second);
         var unit = new FakeUnitOfWork();
-        var useCase = new ReorderVoicesUseCase(owner, pages, voices, unit);
+        var useCase = new ReorderVoicesUseCase(owner, pages, unit, new FakeCatalog(voices));
 
         var reordered = await useCase.ExecuteAsync(
             new ReorderVoicesRequest(page.Id.Value, [second.Id.Value, first.Id.Value]),
@@ -165,13 +172,13 @@ public class PageLifecycleTests
         var page = ApplicationScenes.Draft(owner);
         var (pages, voices) = await ApplicationScenes.Store(page);
         var unit = new FakeUnitOfWork();
-        var useCase = new PublishPageUseCase(owner, pages, voices, unit);
+        var useCase = new PublishPageUseCase(owner, pages, voices, unit, new FakeCatalog(voices));
 
         await Assert.ThrowsAsync<PageHasNoVoicesException>(() =>
             useCase.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
         Assert.Equal(0, unit.Saves);
 
-        var stranger = new PublishPageUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices, unit);
+        var stranger = new PublishPageUseCase(new FakeCaller { UserId = Guid.NewGuid() }, pages, voices, unit, new FakeCatalog(voices));
         await Assert.ThrowsAsync<ForbiddenException>(() =>
             stranger.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
         Assert.Equal(0, unit.Saves);
@@ -186,7 +193,7 @@ public class PageLifecycleTests
         var loose = ApplicationScenes.Pending(page);
         var (pages, voices) = await ApplicationScenes.Store(page, loose);
         var unit = new FakeUnitOfWork();
-        var useCase = new PublishPageUseCase(owner, pages, voices, unit);
+        var useCase = new PublishPageUseCase(owner, pages, voices, unit, new FakeCatalog(voices));
 
         var exception = await Assert.ThrowsAsync<VoicesNotInEpisodeOrderException>(() =>
             useCase.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
@@ -205,7 +212,7 @@ public class PageLifecycleTests
         page.AddVoiceReference(voice.Id, voice.Status);
         var (pages, voices) = await ApplicationScenes.Store(page);
         var unit = new FakeUnitOfWork();
-        var useCase = new PublishPageUseCase(owner, pages, voices, unit);
+        var useCase = new PublishPageUseCase(owner, pages, voices, unit, new FakeCatalog(voices));
 
         await Assert.ThrowsAsync<VoiceNotReadyForPublishException>(() =>
             useCase.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
@@ -220,7 +227,7 @@ public class PageLifecycleTests
         var page = ApplicationScenes.Draft(owner);
         var (pages, voices) = await ApplicationScenes.Store(page);
         var unit = new FakeUnitOfWork();
-        var useCase = new ReorderVoicesUseCase(owner, pages, voices, unit);
+        var useCase = new ReorderVoicesUseCase(owner, pages, unit, new FakeCatalog(voices));
         var tooMany = Enumerable.Range(0, AudioLimits.MaxVoicesPerPage + 1).Select(_ => Guid.NewGuid()).ToArray();
 
         await Assert.ThrowsAsync<ConflictException>(() =>

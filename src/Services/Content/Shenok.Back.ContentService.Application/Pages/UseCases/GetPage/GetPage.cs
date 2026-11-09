@@ -16,13 +16,13 @@ public sealed class GetPageValidator : AbstractValidator<GetPageRequest>
     }
 }
 
-public sealed class GetPageUseCase(IContentCaller caller, IPageRepository pages, IVoiceRepository voices)
+public sealed class GetPageUseCase(IContentCaller caller, IPageRepository pages, IPageCatalogReader catalog)
     : IUseCase<GetPageRequest, PageResponse>
 {
     public async Task<PageResponse> ExecuteAsync(GetPageRequest request, CancellationToken cancellationToken)
     {
         var page = await ContentMaps.RequirePageAsync(pages, request.PageId, cancellationToken);
         PageAccess.EnsureCanRead(page, caller);
-        return await ContentMaps.LoadPageAsync(page, voices, cancellationToken);
+        return await ContentMaps.LoadPageAsync(page, catalog, cancellationToken);
     }
 }

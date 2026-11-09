@@ -1,4 +1,5 @@
 using Shenok.Back.Application.Abstractions.Exceptions;
+using Shenok.Back.ContentService.Application.Common.Interfaces;
 using Shenok.Back.ContentService.Domain.Aggregates.Pages;
 using Shenok.Back.ContentService.Domain.Aggregates.Voices;
 using Shenok.Back.ContentService.Domain.Aggregates.WaveformMappings;
@@ -38,12 +39,6 @@ internal static class ContentMaps
             ?? throw new NotFoundException("Waveform was not found.");
     }
 
-    public static VoiceSummary ToSummary(Voice voice) => new(
-        voice.Id.Value,
-        voice.Title.Value,
-        voice.DurationSeconds,
-        voice.Status.ToString());
-
     public static VoiceResponse ToVoice(Voice voice) => new(
         voice.Id.Value,
         voice.PageId.Value,
@@ -51,20 +46,25 @@ internal static class ContentMaps
         voice.DurationSeconds,
         voice.Status.ToString());
 
-    public static PageResponse ToPage(Page page, IReadOnlyList<Voice> voices)
+    public static PageResponse ToPage(Page page, PageCatalog catalog)
     {
-        var byId = new Dictionary<VoiceId, Voice>(voices.Count);
-        foreach (var voice in voices)
-            byId[voice.Id] = voice;
+        var byId = new Dictionary<Guid, CatalogVoice>(catalog.Voices.Count);
+        foreach (var voice in catalog.Voices)
+            byId[voice.VoiceId] = voice;
 
         var ordered = new VoiceSummary[page.VoiceIds.Count];
         for (var i = 0; i < page.VoiceIds.Count; i++)
         {
-            var voiceId = page.VoiceIds[i];
+            var voiceId = page.VoiceIds[i].Value;
             if (!byId.TryGetValue(voiceId, out var voice))
-                throw new NotFoundException($"Voice {voiceId.Value} was not found.");
+                throw new NotFoundException($"Voice {voiceId} was not found.");
 
-            ordered[i] = ToSummary(voice);
+            ordered[i] = new VoiceSummary(
+                voice.VoiceId,
+                voice.Title,
+                voice.DurationSeconds,
+                voice.PackagingStatus,
+                voice.PlayCount);
         }
 
         return new PageResponse(
@@ -75,16 +75,17 @@ internal static class ContentMaps
             page.CoverImageUrl?.Value,
             page.Status.ToString(),
             page.CreatedAt,
-            ordered);
+            ordered,
+            catalog.SubscriberCount);
     }
 
-    public static async Task<PageResponse> LoadPageAsync(Page page, IVoiceRepository voices, CancellationToken cancellationToken)
+    public static async Task<PageResponse> LoadPageAsync(
+        Page page,
+        IPageCatalogReader catalog,
+        CancellationToken cancellationToken)
     {
-        if (page.VoiceIds.Count == 0)
-            return ToPage(page, []);
-
-        var loaded = await voices.ListByPageIdsAsync([page.Id], cancellationToken);
-        return ToPage(page, loaded);
+        var read = await catalog.ReadAsync(page.Id, cancellationToken);
+        return ToPage(page, read);
     }
 
     public static Dictionary<VoiceId, PackagingStatus> Readiness(Page page, IReadOnlyList<Voice> voices)

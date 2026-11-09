@@ -52,4 +52,8 @@ internal sealed class MemoryCounterLedger : ICounterLedger
         _receipts[playSessionId] = (voiceId, 1);
         return Task.FromResult(new PlayCounterUpdate(true, true, count));
     }
+
+    internal long SubscriberCountOf(Guid pageId) => _subscribers.GetValueOrDefault(pageId);
+
+    internal long PlayCountOf(Guid voiceId) => _plays.GetValueOrDefault(voiceId);
 }

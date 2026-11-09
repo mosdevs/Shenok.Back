@@ -200,6 +200,7 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         services.AddScoped<IWaveformMappingRepository, WaveformMappingRepository>();
         services.AddScoped<IWaveformCodeAllocator, PostgresWaveformCodeAllocator>();
         services.AddScoped<ICounterLedger, PostgresCounterLedger>();
+        services.AddScoped<IPageCatalogReader, PostgresPageCatalogReader>();
         return services.BuildServiceProvider(validateScopes: true);
     }
 

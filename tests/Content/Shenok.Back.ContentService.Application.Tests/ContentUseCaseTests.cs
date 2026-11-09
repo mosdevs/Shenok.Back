@@ -30,13 +30,14 @@ public class ContentUseCaseTests
         var caller = new FakeCaller();
         var pages = new FakePages();
         var unit = new FakeUnitOfWork();
-        var useCase = new CreatePageUseCase(caller, pages, unit);
+        var useCase = new CreatePageUseCase(caller, pages, unit, new FakeCatalog(new FakeVoices()));
 
         var created = await useCase.ExecuteAsync(new CreatePageRequest("Night Walks", "A quiet show.", null), CancellationToken.None);
 
         Assert.Equal(caller.UserId, created.OwnerId);
         Assert.Equal(nameof(PageStatus.Draft), created.Status);
         Assert.Empty(created.Voices);
+        Assert.Equal(0, created.SubscriberCount);
         Assert.Equal(1, unit.Saves);
     }
 
@@ -45,7 +46,7 @@ public class ContentUseCaseTests
     {
         var caller = new FakeCaller { IsContentCreator = false };
         var unit = new FakeUnitOfWork();
-        var useCase = new CreatePageUseCase(caller, new FakePages(), unit);
+        var useCase = new CreatePageUseCase(caller, new FakePages(), unit, new FakeCatalog(new FakeVoices()));
 
         await Assert.ThrowsAsync<ForbiddenException>(() =>
             useCase.ExecuteAsync(new CreatePageRequest("Night Walks", null, null), CancellationToken.None));
@@ -61,7 +62,7 @@ public class ContentUseCaseTests
         await pages.AddAsync(page);
         var caller = new FakeCaller { IsAdmin = true, UserId = Guid.NewGuid() };
         var unit = new FakeUnitOfWork();
-        var useCase = new UpdatePageMetadataUseCase(caller, pages, new FakeVoices(), unit);
+        var useCase = new UpdatePageMetadataUseCase(caller, pages, unit, new FakeCatalog(new FakeVoices()));
 
         var updated = await useCase.ExecuteAsync(
             new UpdatePageMetadataRequest(page.Id.Value, "New", "Updated", null),
@@ -84,7 +85,7 @@ public class ContentUseCaseTests
         await pages.AddAsync(page);
         voices.Add(pending);
         var unit = new FakeUnitOfWork();
-        var useCase = new PublishPageUseCase(caller, pages, voices, unit);
+        var useCase = new PublishPageUseCase(caller, pages, voices, unit, new FakeCatalog(voices));
 
         await Assert.ThrowsAsync<VoiceNotReadyForPublishException>(() =>
             useCase.ExecuteAsync(new PublishPageRequest(page.Id.Value), CancellationToken.None));
@@ -163,7 +164,7 @@ public class ContentUseCaseTests
         voices.Add(ready);
         voices.Add(pending);
         var unit = new FakeUnitOfWork();
-        var useCase = new AddVoiceToPageUseCase(caller, pages, voices, unit);
+        var useCase = new AddVoiceToPageUseCase(caller, pages, voices, unit, new FakeCatalog(voices));
 
         await Assert.ThrowsAsync<VoiceNotReadyForPublishException>(() =>
             useCase.ExecuteAsync(new AddVoiceToPageRequest(page.Id.Value, pending.Id.Value), CancellationToken.None));

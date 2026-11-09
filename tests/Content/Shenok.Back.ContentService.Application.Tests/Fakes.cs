@@ -94,6 +94,34 @@ internal sealed class FakeVoices : IVoiceRepository
     }
 }
 
+internal sealed class FakeCatalog(FakeVoices voices) : IPageCatalogReader
+{
+    private readonly Dictionary<Guid, long> _subscribers = [];
+    private readonly Dictionary<Guid, long> _plays = [];
+
+    public void SetSubscriberCount(Guid pageId, long count) => _subscribers[pageId] = count;
+
+    public void SetPlayCount(Guid voiceId, long count) => _plays[voiceId] = count;
+
+    public async Task<PageCatalog> ReadAsync(PageId pageId, CancellationToken cancellationToken = default)
+    {
+        var loaded = await voices.ListByPageIdsAsync([pageId], cancellationToken);
+        var rows = new CatalogVoice[loaded.Count];
+        for (var i = 0; i < loaded.Count; i++)
+        {
+            var voice = loaded[i];
+            rows[i] = new CatalogVoice(
+                voice.Id.Value,
+                voice.Title.Value,
+                voice.DurationSeconds,
+                voice.Status.ToString(),
+                _plays.GetValueOrDefault(voice.Id.Value));
+        }
+
+        return new PageCatalog(_subscribers.GetValueOrDefault(pageId.Value), rows);
+    }
+}
+
 internal sealed class FakeCounterLedger : ICounterLedger
 {
     private readonly Dictionary<string, (Guid Target, int Delta)> _receipts = [];
