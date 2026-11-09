@@ -7,11 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Matching\" />
-    <Folder Include="Messaging\" />
-    <Folder Include="Persistence\Configurations\" />
-    <Folder Include="Persistence\Migrations\" />
-    <Folder Include="Persistence\Repositories\" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <InternalsVisibleTo Include="Shenok.Back.RecognitionService.Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shenok.Back.RecognitionService.Application\Shenok.Back.RecognitionService.Application.csproj" />
+    <ProjectReference Include="..\Shenok.Back.RecognitionService.Domain\Shenok.Back.RecognitionService.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.WaveformCodec\Shenok.Back.WaveformCodec.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
 </Project>

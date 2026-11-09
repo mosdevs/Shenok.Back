@@ -6,7 +6,7 @@ namespace Shenok.Back.ContentService.Infrastructure.Persistence.Outbox;
 
 /// <summary>
 /// Waveform integration row written in the same transaction as the mapping change.
-/// The publisher that marks <see cref="PublishedOn"/> is phase 5.
+/// <see cref="MarkPublished"/> runs only after the broker confirms the payload.
 /// </summary>
 public sealed class OutboxMessage
 {
@@ -20,6 +20,19 @@ public sealed class OutboxMessage
     public string Payload { get; private set; } = string.Empty;
     public DateTime OccurredOn { get; private set; }
     public DateTime? PublishedOn { get; private set; }
+
+    /// <summary>
+    /// Records the confirm time. The value must be UTC. A second call is rejected so a replay cannot move the clock.
+    /// </summary>
+    public void MarkPublished(DateTime publishedOn)
+    {
+        if (publishedOn.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("Published time must be UTC.", nameof(publishedOn));
+        if (PublishedOn is not null)
+            throw new InvalidOperationException("The outbox message is already published.");
+
+        PublishedOn = publishedOn;
+    }
 
     private OutboxMessage()
     {

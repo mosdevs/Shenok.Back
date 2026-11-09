@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Shenok.Back.ContentService.Application.Common.Interfaces;
 using Shenok.Back.ContentService.Domain.Repositories;
 using Shenok.Back.ContentService.Domain.Services;
+using Shenok.Back.ContentService.Infrastructure.Messaging;
 using Shenok.Back.ContentService.Infrastructure.Packaging;
 using Shenok.Back.ContentService.Infrastructure.Persistence;
 using Shenok.Back.ContentService.Infrastructure.Persistence.DomainEvents;
@@ -55,8 +56,29 @@ public static class DependencyInjection
         services.AddSingleton<IAudioPackager, FfmpegAudioPackager>();
         if (IsPackagingEnabled(configuration))
             services.AddContentPackagingActor();
+        if (IsMessagingEnabled(configuration))
+            AddWaveformPublisher(services, configuration);
 
         return services;
+    }
+
+    private static void AddWaveformPublisher(IServiceCollection services, IConfiguration configuration)
+    {
+        var messaging = configuration.GetSection(MessagingOptions.SectionName).Get<MessagingOptions>() ?? new MessagingOptions();
+        if (!MessagingOptions.IsValid(messaging))
+            throw new InvalidOperationException("Messaging configuration is invalid.");
+
+        var rabbit = configuration.GetConnectionString("rabbitmq");
+        if (string.IsNullOrWhiteSpace(rabbit))
+            throw new InvalidOperationException("ConnectionStrings:rabbitmq is required.");
+
+        services.AddOptions<MessagingOptions>()
+            .Bind(configuration.GetSection(MessagingOptions.SectionName))
+            .Validate(MessagingOptions.IsValid, "Messaging configuration is invalid.")
+            .ValidateOnStart();
+        services.AddSingleton<RabbitMqWaveformEventPublisher>();
+        services.AddSingleton<IWaveformEventPublisher>(provider => provider.GetRequiredService<RabbitMqWaveformEventPublisher>());
+        services.AddHostedService<OutboxPublisher>();
     }
 
     private static bool IsPackagingEnabled(IConfiguration configuration)
@@ -64,5 +86,10 @@ public static class DependencyInjection
         var packaging = configuration.GetSection(PackagingOptions.SectionName).Get<PackagingOptions>()
             ?? new PackagingOptions();
         return packaging.Enabled;
+    }
+
+    private static bool IsMessagingEnabled(IConfiguration configuration)
+    {
+        return configuration.GetValue($"{MessagingOptions.SectionName}:Enabled", false);
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shenok.Back.ContentService.Infrastructure.Messaging;
 using Shenok.Back.ContentService.Infrastructure.Persistence;
 
 namespace Shenok.Back.ContentService.Infrastructure.Tests.Hosting;
@@ -73,5 +74,54 @@ public sealed class DependencyInjectionTests
 
         await host.StartAsync(timeout.Token);
         await host.StopAsync(timeout.Token);
+    }
+
+    [Fact]
+    public void Disabled_messaging_does_not_register_the_outbox_publisher()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:content"] = "Host=127.0.0.1;Port=1;Database=content;Username=content;Password=content",
+            ["ConnectionStrings:blobs"] = "UseDevelopmentStorage=true",
+            ["Packaging:Enabled"] = "false",
+            ["Messaging:Enabled"] = "false"
+        }).Build();
+        var services = new ServiceCollection();
+
+        services.AddContentInfrastructure(configuration);
+
+        Assert.DoesNotContain(services, descriptor => descriptor.ImplementationType == typeof(OutboxPublisher));
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IWaveformEventPublisher));
+    }
+
+    [Fact]
+    public void Enabled_messaging_requires_a_rabbit_connection_string()
+    {
+        var missing = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:content"] = "Host=127.0.0.1;Port=1;Database=content;Username=content;Password=content",
+            ["ConnectionStrings:blobs"] = "UseDevelopmentStorage=true",
+            ["Packaging:Enabled"] = "false",
+            ["Messaging:Enabled"] = "true"
+        }).Build();
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            new ServiceCollection().AddContentInfrastructure(missing));
+        Assert.Contains("ConnectionStrings:rabbitmq", exception.Message, StringComparison.Ordinal);
+
+        var configured = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:content"] = "Host=127.0.0.1;Port=1;Database=content;Username=content;Password=content",
+            ["ConnectionStrings:blobs"] = "UseDevelopmentStorage=true",
+            ["ConnectionStrings:rabbitmq"] = "amqp://guest:guest@127.0.0.1:5672",
+            ["Packaging:Enabled"] = "false",
+            ["Messaging:Enabled"] = "true",
+            ["Messaging:PollIntervalSeconds"] = "1",
+            ["Messaging:BatchSize"] = "20"
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddContentInfrastructure(configured);
+
+        Assert.Contains(services, descriptor => descriptor.ImplementationType == typeof(OutboxPublisher));
     }
 }

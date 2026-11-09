@@ -42,6 +42,23 @@ public sealed class OutboxAndConversionTests
     }
 
     [Fact]
+    public void Mark_published_requires_utc_and_rejects_a_second_call()
+    {
+        var message = OutboxMessage.From(ContentFactory.PageMapping(ContentFactory.DraftPage().Id).DomainEvents.Single());
+        Assert.NotNull(message);
+        var local = DateTime.SpecifyKind(new DateTime(2026, 11, 9, 9, 0, 0), DateTimeKind.Local);
+
+        Assert.Throws<ArgumentException>(() => message.MarkPublished(local));
+        Assert.Null(message.PublishedOn);
+
+        var published = new DateTime(2026, 11, 9, 9, 5, 0, DateTimeKind.Utc);
+        message.MarkPublished(published);
+
+        Assert.Equal(published, message.PublishedOn);
+        Assert.Throws<InvalidOperationException>(() => message.MarkPublished(published.AddMinutes(1)));
+    }
+
+    [Fact]
     public void Voice_order_roundtrips_and_keeps_position()
     {
         var original = new List<VoiceId> { VoiceId.New(), VoiceId.New(), VoiceId.New() };
