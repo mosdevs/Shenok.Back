@@ -6,6 +6,7 @@ using Shenok.Back.EngagementService.Application.Common.Interfaces;
 using Shenok.Back.EngagementService.Domain.Aggregates.ListeningRecords;
 using Shenok.Back.EngagementService.Domain.Aggregates.PlaySessions;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
+using Shenok.Back.EngagementService.Domain.DomainEvents;
 using Shenok.Back.EngagementService.Domain.Repositories;
 
 namespace Shenok.Back.EngagementService.Application.Listening.UseCases.ReportProgress;
@@ -47,11 +48,21 @@ public sealed class ReportProgressUseCase(
         var sessionId = PlaySessionId.From(request.PlaySessionId);
         var position = PlaybackPosition.From(request.PositionSeconds);
 
-        if (await SaveReportAsync(userId, voiceId, sessionId, position, request.Completed, request.IsSeek, cancellationToken))
-            await counters.ApplyPlayAsync(sessionId.Value, voiceId.Value, cancellationToken);
+        var playCommandId = await SaveReportAsync(
+            userId,
+            voiceId,
+            sessionId,
+            position,
+            request.Completed,
+            request.IsSeek,
+            cancellationToken);
+        if (playCommandId is Guid commandId)
+            await counters.ApplyPlayAsync(sessionId.Value, voiceId.Value, commandId, cancellationToken);
+        else
+            await counters.DeliverPendingPlayAsync(sessionId.Value, cancellationToken);
     }
 
-    private async Task<bool> SaveReportAsync(
+    private async Task<Guid?> SaveReportAsync(
         UserId userId,
         VoiceId voiceId,
         PlaySessionId sessionId,
@@ -66,7 +77,7 @@ public sealed class ReportProgressUseCase(
             var existing = await listeningRecords.GetAsync(userId, voiceId, cancellationToken);
             var record = existing ?? ListeningRecord.Start(userId, voiceId);
             if (!record.ReportProgress(position, completed, isSeek).Accepted)
-                return false;
+                return null;
 
             var session = await sessions.GetAsync(sessionId, cancellationToken);
             if (session is not null && !session.BelongsTo(userId, voiceId))
@@ -78,23 +89,23 @@ public sealed class ReportProgressUseCase(
             else
                 await listeningRecords.UpdateAsync(record, cancellationToken);
 
-            var counted = false;
+            Guid? playCommandId = null;
             if (session is null)
             {
                 session = PlaySession.Open(sessionId, userId, voiceId);
-                counted = session.AcceptFirstReport();
+                playCommandId = AcceptPlay(session);
                 await sessions.AddAsync(session, cancellationToken);
             }
             else if (session.AcceptFirstReport())
             {
-                counted = true;
+                playCommandId = PlayCommandId(session);
                 await sessions.UpdateAsync(session, cancellationToken);
             }
 
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                return counted;
+                return playCommandId;
             }
             catch (EngagementInsertConflictException exception) when (exception.Target == EngagementInsertTarget.PlaySession)
             {
@@ -134,8 +145,9 @@ public sealed class ReportProgressUseCase(
     /// <summary>
     /// Writes the listening report after a combined save rolled back.
     /// When <paramref name="ownedSessionId"/> is set, a still-uncounted session is updated in the same save.
+    /// The returned id is the play command stored in that save.
     /// </summary>
-    private async Task<bool> SaveListeningAsync(
+    private async Task<Guid?> SaveListeningAsync(
         UserId userId,
         VoiceId voiceId,
         PlaybackPosition position,
@@ -150,7 +162,7 @@ public sealed class ReportProgressUseCase(
             var existing = await listeningRecords.GetAsync(userId, voiceId, cancellationToken);
             var record = existing ?? ListeningRecord.Start(userId, voiceId);
             if (!record.ReportProgress(position, completed, isSeek).Accepted)
-                return false;
+                return null;
 
             var isNewRecord = existing is null;
             if (isNewRecord)
@@ -158,7 +170,7 @@ public sealed class ReportProgressUseCase(
             else
                 await listeningRecords.UpdateAsync(record, cancellationToken);
 
-            var counted = false;
+            Guid? playCommandId = null;
             if (ownedSessionId is not null)
             {
                 var session = await sessions.GetAsync(ownedSessionId, cancellationToken)
@@ -168,7 +180,7 @@ public sealed class ReportProgressUseCase(
 
                 if (session.AcceptFirstReport())
                 {
-                    counted = true;
+                    playCommandId = PlayCommandId(session);
                     await sessions.UpdateAsync(session, cancellationToken);
                 }
             }
@@ -176,7 +188,7 @@ public sealed class ReportProgressUseCase(
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                return counted;
+                return playCommandId;
             }
             catch (EngagementInsertConflictException exception)
                 when (isNewRecord && exception.Target == EngagementInsertTarget.ListeningRecord)
@@ -197,4 +209,15 @@ public sealed class ReportProgressUseCase(
 
         throw new UnavailableException("Listening progress could not be saved.");
     }
+
+    private static Guid AcceptPlay(PlaySession session)
+    {
+        if (!session.AcceptFirstReport())
+            throw new InvalidOperationException("A new play session was already counted.");
+
+        return PlayCommandId(session);
+    }
+
+    private static Guid PlayCommandId(PlaySession session) =>
+        session.DomainEvents.OfType<VoicePlayedDomainEvent>().Last().EventId;
 }

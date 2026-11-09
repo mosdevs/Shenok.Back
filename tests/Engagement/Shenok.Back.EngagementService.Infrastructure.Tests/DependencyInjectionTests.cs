@@ -30,24 +30,25 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public async Task Content_counters_are_the_no_op_until_phase_6()
+    public void Content_counters_call_content_after_the_save()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"ConnectionStrings:{DependencyInjection.ConnectionStringName}"] =
-                    "Host=127.0.0.1;Port=1;Database=engagement;Username=engagement;Password=engagement"
+                    "Host=127.0.0.1;Port=1;Database=engagement;Username=engagement;Password=engagement",
+                [$"{ContentCounterOptions.SectionName}:BaseUrl"] = "http://127.0.0.1:9",
+                [ContentCounterOptions.ApiKeyConfigurationPath] = "engagement-test-key"
             })
             .Build();
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddEngagementInfrastructure(configuration);
-        await using var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
 
-        var counters = provider.GetRequiredService<IContentCounters>();
-        Assert.IsType<NoOpContentCounters>(counters);
-        await counters.ApplySubscriberDeltaAsync(Guid.NewGuid(), Guid.NewGuid(), delta: 1);
-        await counters.ApplyPlayAsync("play-1", Guid.NewGuid());
+        var counters = scope.ServiceProvider.GetRequiredService<IContentCounters>();
+        Assert.IsType<HttpContentCounters>(counters);
     }
 
     [Fact]

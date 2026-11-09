@@ -7,6 +7,7 @@ using Shenok.Back.EngagementService.Application.Common.Interfaces;
 using Shenok.Back.EngagementService.Domain.Aggregates.ListeningRecords;
 using Shenok.Back.EngagementService.Domain.Aggregates.ScanReceipts;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
+using Shenok.Back.EngagementService.Domain.DomainEvents;
 using Shenok.Back.EngagementService.Domain.Repositories;
 
 namespace Shenok.Back.EngagementService.Application.Scans.UseCases.RegisterScan;
@@ -60,7 +61,7 @@ public sealed class RegisterScanUseCase(
 
         var stored = await receipts.GetAsync(scanId, cancellationToken);
         if (stored is not null)
-            return OwnedSnapshot(stored, userId);
+            return await OwnedSnapshot(stored, userId, cancellationToken);
 
         var listening = await listeningRecords.GetAsync(userId, voiceId, cancellationToken);
         var resume = listening?.Position ?? PlaybackPosition.Zero;
@@ -74,6 +75,9 @@ public sealed class RegisterScanUseCase(
 
             var unlockedNow = relationship.Unlock();
             var followed = options.Value.AutoFollowOnScan && relationship.Follow();
+            Guid? followCommandId = followed
+                ? relationship.DomainEvents.OfType<PageFollowedDomainEvent>().Last().EventId
+                : null;
 
             var receipt = ScanReceipt.Record(
                 scanId,
@@ -96,13 +100,18 @@ public sealed class RegisterScanUseCase(
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                if (followed)
+                if (followCommandId is Guid commandId)
                 {
                     await counters.ApplySubscriberDeltaAsync(
                         userId.Value,
                         pageId.Value,
                         delta: 1,
+                        commandId,
                         cancellationToken);
+                }
+                else if (relationship.IsFollowing)
+                {
+                    await counters.DeliverPendingSubscriberAsync(userId.Value, pageId.Value, cancellationToken);
                 }
 
                 return ToResponse(receipt);
@@ -111,7 +120,7 @@ public sealed class RegisterScanUseCase(
             {
                 var winner = await receipts.GetAsync(scanId, cancellationToken)
                     ?? throw new InvalidOperationException("The scan id that won the insert was not found.");
-                return OwnedSnapshot(winner, userId);
+                return await OwnedSnapshot(winner, userId, cancellationToken);
             }
             catch (EngagementInsertConflictException exception)
                 when (isNew && exception.Target == EngagementInsertTarget.UserPageRelationship)
@@ -133,10 +142,16 @@ public sealed class RegisterScanUseCase(
         throw new UnavailableException("The scan could not be stored.");
     }
 
-    private static RegisterScanResponse OwnedSnapshot(ScanReceipt receipt, UserId userId)
+    private async Task<RegisterScanResponse> OwnedSnapshot(
+        ScanReceipt receipt,
+        UserId userId,
+        CancellationToken cancellationToken)
     {
         if (!receipt.BelongsTo(userId))
             throw new ConflictException(EngagementConflict.ScanBelongsToAnotherUser);
+
+        if (receipt.IsFollowing)
+            await counters.DeliverPendingSubscriberAsync(userId.Value, receipt.PageId.Value, cancellationToken);
 
         return ToResponse(receipt);
     }

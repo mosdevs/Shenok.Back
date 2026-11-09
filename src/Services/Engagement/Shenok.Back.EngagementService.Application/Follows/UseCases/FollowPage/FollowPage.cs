@@ -4,6 +4,7 @@ using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.EngagementService.Application.Common;
 using Shenok.Back.EngagementService.Application.Common.Interfaces;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
+using Shenok.Back.EngagementService.Domain.DomainEvents;
 using Shenok.Back.EngagementService.Domain.Repositories;
 
 namespace Shenok.Back.EngagementService.Application.Follows.UseCases.FollowPage;
@@ -20,7 +21,7 @@ public sealed class FollowPageValidator : AbstractValidator<FollowPageRequest>
 }
 
 /// <summary>
-/// Follows a page once. A second follow does not call the subscriber port.
+/// Follows a page once. A second follow delivers a counter command that the first save left unpublished.
 /// </summary>
 public sealed class FollowPageUseCase(
     IUserPageRelationshipRepository relationships,
@@ -40,8 +41,12 @@ public sealed class FollowPageUseCase(
             relationship ??= UserPageRelationship.Start(userId, pageId);
 
             if (!relationship.Follow())
+            {
+                await counters.DeliverPendingSubscriberAsync(userId.Value, pageId.Value, cancellationToken);
                 return;
+            }
 
+            var commandId = relationship.DomainEvents.OfType<PageFollowedDomainEvent>().Last().EventId;
             if (isNew)
                 await relationships.AddAsync(relationship, cancellationToken);
             else
@@ -50,7 +55,7 @@ public sealed class FollowPageUseCase(
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                await counters.ApplySubscriberDeltaAsync(userId.Value, pageId.Value, delta: 1, cancellationToken);
+                await counters.ApplySubscriberDeltaAsync(userId.Value, pageId.Value, delta: 1, commandId, cancellationToken);
                 return;
             }
             catch (EngagementInsertConflictException exception)

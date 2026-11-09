@@ -207,6 +207,53 @@ namespace Shenok.Back.ContentService.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Shenok.Back.ContentService.Infrastructure.Persistence.Counters.PlayCounterReceipt", b =>
+                {
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("VoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voice_id");
+
+                    b.HasKey("IdempotencyKey");
+
+                    b.ToTable("play_counter_receipts", (string)null);
+                });
+
+            modelBuilder.Entity("Shenok.Back.ContentService.Infrastructure.Persistence.Counters.SubscriberCounterReceipt", b =>
+                {
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Delta")
+                        .HasColumnType("integer")
+                        .HasColumnName("delta");
+
+                    b.Property<Guid>("PageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("page_id");
+
+                    b.HasKey("IdempotencyKey");
+
+                    b.ToTable("subscriber_counter_receipts", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_subscriber_counter_receipts_delta", "delta IN (1, -1)");
+                        });
+                });
+
             modelBuilder.Entity("Shenok.Back.ContentService.Infrastructure.Persistence.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

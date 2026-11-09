@@ -62,27 +62,45 @@ public sealed class InternalRouteTests(ContentApiFixture api)
     }
 
     [Fact]
-    public async Task Subscriber_and_play_commands_answer_501_and_do_not_require_a_user()
+    public async Task Subscriber_and_play_commands_apply_once_and_do_not_require_a_user()
     {
         var page = api.SeedPublished();
         var voiceId = page.VoiceIds[0].Value;
+        var playSessionId = Guid.NewGuid();
 
         var subscribers = await api.SendAsync(
             HttpMethod.Post,
             $"/internal/pages/{page.Id.Value:D}/subscribers",
             new { delta = 1, idempotencyKey = "follow-1" });
-        Assert.Equal(HttpStatusCode.NotImplemented, subscribers.StatusCode);
-        Assert.Equal("application/problem+json", subscribers.Content.Headers.ContentType?.MediaType);
-        var subscriberProblem = await ApiJson.ReadAsync(subscribers);
-        ApiJson.AssertProblem(subscriberProblem, HttpStatusCode.NotImplemented, "https://shenok.dev/problems/not-implemented");
-        Assert.Equal("Content counters are applied in phase 6 and were not changed.", subscriberProblem.GetProperty("detail").GetString());
+        Assert.Equal(HttpStatusCode.OK, subscribers.StatusCode);
+        var subscriberBody = await ApiJson.ReadAsync(subscribers);
+        Assert.True(subscriberBody.GetProperty("applied").GetBoolean());
+        Assert.Equal(1, subscriberBody.GetProperty("subscriberCount").GetInt64());
+
+        var replay = await api.SendAsync(
+            HttpMethod.Post,
+            $"/internal/pages/{page.Id.Value:D}/subscribers",
+            new { delta = 1, idempotencyKey = "follow-1" });
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+        var replayBody = await ApiJson.ReadAsync(replay);
+        Assert.False(replayBody.GetProperty("applied").GetBoolean());
+        Assert.Equal(1, replayBody.GetProperty("subscriberCount").GetInt64());
 
         var plays = await api.SendAsync(
             HttpMethod.Post,
             $"/internal/voices/{voiceId:D}/plays",
-            new { playSessionId = Guid.NewGuid() });
-        Assert.Equal(HttpStatusCode.NotImplemented, plays.StatusCode);
-        ApiJson.AssertProblem(await ApiJson.ReadAsync(plays), HttpStatusCode.NotImplemented, "https://shenok.dev/problems/not-implemented");
+            new { playSessionId });
+        Assert.Equal(HttpStatusCode.OK, plays.StatusCode);
+        var playBody = await ApiJson.ReadAsync(plays);
+        Assert.True(playBody.GetProperty("applied").GetBoolean());
+        Assert.Equal(1, playBody.GetProperty("playCount").GetInt64());
+
+        var playReplay = await api.SendAsync(
+            HttpMethod.Post,
+            $"/internal/voices/{voiceId:D}/plays",
+            new { playSessionId });
+        Assert.Equal(HttpStatusCode.OK, playReplay.StatusCode);
+        Assert.False((await ApiJson.ReadAsync(playReplay)).GetProperty("applied").GetBoolean());
 
         var invalidDelta = await api.SendAsync(
             HttpMethod.Post,

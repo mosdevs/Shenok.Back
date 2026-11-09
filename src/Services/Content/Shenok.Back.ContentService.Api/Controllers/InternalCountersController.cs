@@ -30,11 +30,11 @@ public sealed class InternalCountersController(
         CancellationToken cancellationToken) =>
         UseCaseHttp.OkOrDeferredAsync(
             HttpContext,
-            new IncrementPlayCountRequest(voiceId, body.PlaySessionId),
+            new IncrementPlayCountRequest(voiceId, body.PlaySessionId ?? string.Empty),
             (request, token) => incrementPlayCount.ExecuteAsync(request, token),
             cancellationToken);
 }
 
 public sealed record SubscriberDeltaBody(long Delta, string? IdempotencyKey);
 
-public sealed record PlayCountBody(Guid PlaySessionId);
+public sealed record PlayCountBody(string? PlaySessionId);

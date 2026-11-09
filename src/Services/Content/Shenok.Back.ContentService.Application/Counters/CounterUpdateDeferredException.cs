@@ -1,8 +1,8 @@
 namespace Shenok.Back.ContentService.Application.Counters;
 
 /// <summary>
-/// Phase 2 accepts the counter command shape and does not change <c>PageCounter</c> or <c>VoiceCounter</c>.
-/// Phase 6 replaces the throw with one guarded SQL update.
+/// Kept so an internal counter route can still answer 501 if a caller defers the update.
+/// The counter use cases apply the count and do not throw this.
 /// </summary>
 public sealed class CounterUpdateDeferredException : Exception
 {

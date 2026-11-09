@@ -4,7 +4,7 @@ namespace Shenok.Back.ContentService.Domain.Aggregates.Counters;
 
 /// <summary>
 /// Projection row keyed by voice. PlayCount starts at zero.
-/// Phase 6 updates it with guarded SQL. Do not increment it from <see cref="Voice"/>.
+/// The counter ledger updates it with guarded SQL. Do not increment it from <see cref="Voice"/>.
 /// </summary>
 public sealed class VoiceCounter
 {

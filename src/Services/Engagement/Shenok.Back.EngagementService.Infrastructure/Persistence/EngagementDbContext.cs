@@ -7,6 +7,8 @@ using Shenok.Back.EngagementService.Domain.Aggregates.PlaySessions;
 using Shenok.Back.EngagementService.Domain.Aggregates.ScanReceipts;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
 using Shenok.Back.EngagementService.Infrastructure.Persistence.Configurations;
+using Shenok.Back.EngagementService.Infrastructure.Persistence.Counters;
+using Shenok.Back.SharedKernel.DomainEvents;
 
 namespace Shenok.Back.EngagementService.Infrastructure.Persistence;
 
@@ -16,6 +18,7 @@ public sealed class EngagementDbContext : DbContext, IUnitOfWork
     public DbSet<ListeningRecord> ListeningRecords => Set<ListeningRecord>();
     public DbSet<ScanReceipt> ScanReceipts => Set<ScanReceipt>();
     public DbSet<PlaySession> PlaySessions => Set<PlaySession>();
+    public DbSet<CounterCommand> CounterCommands => Set<CounterCommand>();
 
     public EngagementDbContext(DbContextOptions<EngagementDbContext> options) : base(options)
     {
@@ -38,6 +41,7 @@ public sealed class EngagementDbContext : DbContext, IUnitOfWork
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
+        StageCounterCommands();
         try
         {
             return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
@@ -47,10 +51,39 @@ public sealed class EngagementDbContext : DbContext, IUnitOfWork
             DetachFailedAttempt();
             throw new EngagementConcurrencyException();
         }
+        catch (DbUpdateException exception) when (IsDuplicateCounterCommand(exception))
+        {
+            // Two first reports of one play session use different event ids and the same play-session key.
+            // The winner's command is already stored. The loser reloads, sees the session counted, and does not insert another.
+            DetachFailedAttempt();
+            throw new EngagementConcurrencyException();
+        }
         catch (DbUpdateException exception) when (TryMapInsertConflict(exception, out var target))
         {
             DetachFailedAttempt();
             throw new EngagementInsertConflictException(target);
+        }
+    }
+
+    /// <summary>
+    /// Copies follow, unfollow, and play events into <see cref="CounterCommand"/> rows before the save.
+    /// A failed save detaches those rows with the rest of the attempt.
+    /// </summary>
+    private void StageCounterCommands()
+    {
+        var commands = ChangeTracker.Entries<IHasDomainEvents>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .SelectMany(entry => entry.Entity.DomainEvents)
+            .Select(CounterCommand.From)
+            .OfType<CounterCommand>()
+            .ToList();
+
+        foreach (var command in commands)
+        {
+            if (CounterCommands.Local.Any(existing => existing.Id == command.Id))
+                continue;
+
+            CounterCommands.Add(command);
         }
     }
 
@@ -65,6 +98,13 @@ public sealed class EngagementDbContext : DbContext, IUnitOfWork
             if (entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
                 entry.State = EntityState.Detached;
         }
+    }
+
+    private static bool IsDuplicateCounterCommand(DbUpdateException exception)
+    {
+        var postgres = FindPostgresException(exception);
+        return postgres?.SqlState == PostgresErrorCodes.UniqueViolation
+            && postgres.ConstraintName == CounterCommandConfiguration.IdempotencyIndexName;
     }
 
     private static bool TryMapInsertConflict(DbUpdateException exception, out EngagementInsertTarget target)

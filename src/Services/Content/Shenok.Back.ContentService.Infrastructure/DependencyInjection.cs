@@ -7,6 +7,7 @@ using Shenok.Back.ContentService.Infrastructure.Packaging;
 using Shenok.Back.ContentService.Infrastructure.Persistence;
 using Shenok.Back.ContentService.Infrastructure.Persistence.DomainEvents;
 using Shenok.Back.ContentService.Infrastructure.Persistence.Interceptors;
+using Shenok.Back.ContentService.Infrastructure.Persistence.Counters;
 using Shenok.Back.ContentService.Infrastructure.Persistence.Repositories;
 using Shenok.Back.ContentService.Infrastructure.Storage;
 using Shenok.Back.SharedKernel.DomainEvents;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ContentDbContext>());
+        services.AddScoped<ICounterLedger, PostgresCounterLedger>();
         services.AddScoped<IPageRepository, PageRepository>();
         services.AddScoped<IVoiceRepository, VoiceRepository>();
         services.AddScoped<IWaveformMappingRepository, WaveformMappingRepository>();

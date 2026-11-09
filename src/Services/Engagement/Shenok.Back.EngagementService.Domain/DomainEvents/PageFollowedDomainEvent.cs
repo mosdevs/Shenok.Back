@@ -4,7 +4,7 @@ using Shenok.Back.SharedKernel.DomainEvents;
 namespace Shenok.Back.EngagementService.Domain.DomainEvents;
 
 /// <summary>
-/// Raised when a follow actually starts. The user and page pair is the phase 6 idempotency key.
+/// Raised when a follow actually starts. The receipt key is the user, the page, and this event.
 /// </summary>
 public sealed class PageFollowedDomainEvent : DomainEvent
 {

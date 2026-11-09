@@ -712,14 +712,14 @@
         }
       }
     },
-    "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
+    "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
+        "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
         "projectName": "Shenok.Back.Application.Abstractions",
-        "projectPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
+        "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\Shenok.Back.Application.Abstractions.csproj",
         "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
-        "outputPath": "g:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\obj\\",
+        "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Application.Abstractions\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

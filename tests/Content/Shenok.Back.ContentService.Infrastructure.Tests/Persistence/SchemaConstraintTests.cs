@@ -24,6 +24,8 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
         Assert.Contains("waveform_mappings", tables);
         Assert.Contains("page_counters", tables);
         Assert.Contains("voice_counters", tables);
+        Assert.Contains("subscriber_counter_receipts", tables);
+        Assert.Contains("play_counter_receipts", tables);
         Assert.Contains("outbox_messages", tables);
         Assert.Contains("ix_voices_source_storage_key", indexes);
         Assert.Contains("ix_voices_playlist_storage_key", indexes);

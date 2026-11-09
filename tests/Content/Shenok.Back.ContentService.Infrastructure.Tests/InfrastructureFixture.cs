@@ -16,6 +16,7 @@ using Shenok.Back.ContentService.Domain.Repositories;
 using Shenok.Back.ContentService.Domain.Services;
 using Shenok.Back.ContentService.Infrastructure.Packaging;
 using Shenok.Back.ContentService.Infrastructure.Persistence;
+using Shenok.Back.ContentService.Infrastructure.Persistence.Counters;
 using Shenok.Back.ContentService.Infrastructure.Persistence.DomainEvents;
 using Shenok.Back.ContentService.Infrastructure.Persistence.Interceptors;
 using Shenok.Back.ContentService.Infrastructure.Persistence.Repositories;
@@ -198,6 +199,7 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         services.AddScoped<IVoiceRepository, VoiceRepository>();
         services.AddScoped<IWaveformMappingRepository, WaveformMappingRepository>();
         services.AddScoped<IWaveformCodeAllocator, PostgresWaveformCodeAllocator>();
+        services.AddScoped<ICounterLedger, PostgresCounterLedger>();
         return services.BuildServiceProvider(validateScopes: true);
     }
 

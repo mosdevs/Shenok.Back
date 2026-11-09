@@ -20,6 +20,7 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
         Assert.Contains(ListeningRecordConfiguration.TableName, tables);
         Assert.Contains(ScanReceiptConfiguration.TableName, tables);
         Assert.Contains(PlaySessionConfiguration.TableName, tables);
+        Assert.Contains(CounterCommandConfiguration.TableName, tables);
         Assert.DoesNotContain("outbox_messages", tables);
 
         var primaryKeys = await QueryStringsAsync(
@@ -35,6 +36,14 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
         Assert.Contains(ScanReceiptConfiguration.PrimaryKeyName, primaryKeys);
         Assert.Contains(PlaySessionConfiguration.PrimaryKeyName, primaryKeys);
 
+        var indexes = await QueryStringsAsync(
+            "SELECT indexname FROM pg_indexes WHERE schemaname = 'public'");
+        Assert.Contains(CounterCommandConfiguration.IdempotencyIndexName, indexes);
+        Assert.Contains(CounterCommandConfiguration.UnpublishedIndexName, indexes);
+        var unpublished = await QueryStringAsync(
+            "SELECT indexdef FROM pg_indexes WHERE indexname = 'ix_content_counter_commands_unpublished'");
+        Assert.Contains("published_on IS NULL", unpublished, StringComparison.OrdinalIgnoreCase);
+
         var checks = await QueryStringsAsync(
             """
             SELECT con.conname
@@ -45,6 +54,8 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
             """);
         Assert.Contains(ListeningRecordConfiguration.PositionCheckName, checks);
         Assert.Contains(ScanReceiptConfiguration.ResumePositionCheckName, checks);
+        Assert.Contains(CounterCommandConfiguration.KindCheckName, checks);
+        Assert.Contains(CounterCommandConfiguration.ShapeCheckName, checks);
 
         var userXminColumns = await QueryStringsAsync(
             """
@@ -123,6 +134,12 @@ public sealed class SchemaConstraintTests(InfrastructureFixture fixture)
             values.Add(reader.GetString(0));
 
         return values;
+    }
+
+    private async Task<string> QueryStringAsync(string sql)
+    {
+        var values = await QueryStringsAsync(sql);
+        return Assert.Single(values);
     }
 
     private async Task<IReadOnlyList<int>> QueryIntsAsync(string sql, NpgsqlParameter parameter)

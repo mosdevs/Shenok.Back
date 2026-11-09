@@ -4,6 +4,7 @@ using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.EngagementService.Application.Common;
 using Shenok.Back.EngagementService.Application.Common.Interfaces;
 using Shenok.Back.EngagementService.Domain.Aggregates.UserPageRelationships;
+using Shenok.Back.EngagementService.Domain.DomainEvents;
 using Shenok.Back.EngagementService.Domain.Repositories;
 
 namespace Shenok.Back.EngagementService.Application.Follows.UseCases.UnfollowPage;
@@ -40,14 +41,18 @@ public sealed class UnfollowPageUseCase(
                 return;
 
             if (!relationship.Unfollow())
+            {
+                await counters.DeliverPendingSubscriberAsync(userId.Value, pageId.Value, cancellationToken);
                 return;
+            }
 
+            var commandId = relationship.DomainEvents.OfType<PageUnfollowedDomainEvent>().Last().EventId;
             await relationships.UpdateAsync(relationship, cancellationToken);
 
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                await counters.ApplySubscriberDeltaAsync(userId.Value, pageId.Value, delta: -1, cancellationToken);
+                await counters.ApplySubscriberDeltaAsync(userId.Value, pageId.Value, delta: -1, commandId, cancellationToken);
                 return;
             }
             catch (EngagementConcurrencyException)

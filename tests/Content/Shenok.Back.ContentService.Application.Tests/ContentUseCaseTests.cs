@@ -356,7 +356,7 @@ public class ContentUseCaseTests
     }
 
     [Fact]
-    public async Task Counter_commands_do_not_change_counts()
+    public async Task Counter_commands_apply_once_and_a_repeat_does_not()
     {
         var caller = new FakeCaller { IsInternalService = true };
         var page = Page.CreateDraft(OwnerId.New(), PageTitle.Create("Show"), PageDescription.Create(null), null);
@@ -365,23 +365,44 @@ public class ContentUseCaseTests
         var voiceStore = new FakeVoices();
         await pages.AddAsync(page);
         voiceStore.Add(voice);
-        var subscribers = new ApplySubscriberDeltaUseCase(caller, pages);
-        var plays = new IncrementPlayCountUseCase(caller, voiceStore);
+        var ledger = new FakeCounterLedger();
+        var subscribers = new ApplySubscriberDeltaUseCase(caller, pages, ledger);
+        var plays = new IncrementPlayCountUseCase(caller, voiceStore, ledger);
+        var playSessionId = Guid.NewGuid().ToString("D");
 
-        await Assert.ThrowsAsync<CounterUpdateDeferredException>(() =>
-            subscribers.ExecuteAsync(new ApplySubscriberDeltaRequest(page.Id.Value, 1, "user:page"), CancellationToken.None));
+        var first = await subscribers.ExecuteAsync(
+            new ApplySubscriberDeltaRequest(page.Id.Value, 1, "user:page"),
+            CancellationToken.None);
+        Assert.True(first.Applied);
+        Assert.Equal(1, first.SubscriberCount);
+        var duplicate = await subscribers.ExecuteAsync(
+            new ApplySubscriberDeltaRequest(page.Id.Value, 1, "user:page"),
+            CancellationToken.None);
+        Assert.False(duplicate.Applied);
+        Assert.Equal(1, duplicate.SubscriberCount);
+
         await Assert.ThrowsAsync<NotFoundException>(() =>
             subscribers.ExecuteAsync(new ApplySubscriberDeltaRequest(Guid.NewGuid(), 1, "user:missing"), CancellationToken.None));
-        await Assert.ThrowsAsync<CounterUpdateDeferredException>(() =>
-            plays.ExecuteAsync(new IncrementPlayCountRequest(voice.Id.Value, Guid.NewGuid()), CancellationToken.None));
+        var play = await plays.ExecuteAsync(
+            new IncrementPlayCountRequest(voice.Id.Value, playSessionId),
+            CancellationToken.None);
+        Assert.True(play.Applied);
+        Assert.Equal(1, play.PlayCount);
+        var replay = await plays.ExecuteAsync(
+            new IncrementPlayCountRequest(voice.Id.Value, playSessionId),
+            CancellationToken.None);
+        Assert.False(replay.Applied);
+        Assert.Equal(1, replay.PlayCount);
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            plays.ExecuteAsync(new IncrementPlayCountRequest(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None));
+            plays.ExecuteAsync(new IncrementPlayCountRequest(Guid.NewGuid(), Guid.NewGuid().ToString("D")), CancellationToken.None));
         await Assert.ThrowsAsync<ConflictException>(() =>
             subscribers.ExecuteAsync(new ApplySubscriberDeltaRequest(page.Id.Value, 5, "user:page"), CancellationToken.None));
         await Assert.ThrowsAsync<ForbiddenException>(() =>
-            new ApplySubscriberDeltaUseCase(new FakeCaller(), pages).ExecuteAsync(
+            new ApplySubscriberDeltaUseCase(new FakeCaller(), pages, ledger).ExecuteAsync(
                 new ApplySubscriberDeltaRequest(page.Id.Value, 1, "user:page"),
                 CancellationToken.None));
+        Assert.Equal(2, ledger.SubscriberCalls);
+        Assert.Equal(2, ledger.PlayCalls);
     }
 
     private static UploadVoiceRequest Upload(Guid pageId, long size) =>

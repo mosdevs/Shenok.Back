@@ -175,6 +175,71 @@ namespace Shenok.Back.EngagementService.Infrastructure.Persistence.Migrations
 
                     b.ToTable("user_page_relationships", (string)null);
                 });
+
+            modelBuilder.Entity("Shenok.Back.EngagementService.Infrastructure.Persistence.Counters.CounterCommand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Delta")
+                        .HasColumnType("integer")
+                        .HasColumnName("delta");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("command_kind");
+
+                    b.Property<DateTime>("OccurredOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_on");
+
+                    b.Property<Guid?>("PageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("page_id");
+
+                    b.Property<string>("PlaySessionId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("play_session_id");
+
+                    b.Property<DateTime?>("PublishedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_on");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid?>("VoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voice_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_content_counter_commands_idempotency_key");
+
+                    b.HasIndex("OccurredOn", "Id")
+                        .HasDatabaseName("ix_content_counter_commands_unpublished")
+                        .HasFilter("published_on IS NULL");
+
+                    b.ToTable("content_counter_commands", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_content_counter_commands_kind", "command_kind IN ('Subscriber', 'Play')");
+
+                            t.HasCheckConstraint("ck_content_counter_commands_shape", "(command_kind = 'Subscriber' AND user_id IS NOT NULL AND page_id IS NOT NULL AND voice_id IS NULL AND play_session_id IS NULL AND delta IN (1, -1))\nOR (command_kind = 'Play' AND user_id IS NULL AND page_id IS NULL AND voice_id IS NOT NULL AND play_session_id IS NOT NULL AND delta = 1)");
+                        });
+                });
 #pragma warning restore 612, 618
         }
     }

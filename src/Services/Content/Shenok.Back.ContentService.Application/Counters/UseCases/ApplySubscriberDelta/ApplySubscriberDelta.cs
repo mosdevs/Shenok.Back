@@ -23,10 +23,12 @@ public sealed class ApplySubscriberDeltaValidator : AbstractValidator<ApplySubsc
 }
 
 /// <summary>
-/// Phase 6 applies the subscriber change. A missing page is rejected first. The count is not changed.
+/// Adds or removes one subscriber. The receipt key decides whether this delivery changes the count.
 /// </summary>
-public sealed class ApplySubscriberDeltaUseCase(IContentCaller caller, IPageRepository pages)
-    : IUseCase<ApplySubscriberDeltaRequest, ApplySubscriberDeltaResponse>
+public sealed class ApplySubscriberDeltaUseCase(
+    IContentCaller caller,
+    IPageRepository pages,
+    ICounterLedger ledger) : IUseCase<ApplySubscriberDeltaRequest, ApplySubscriberDeltaResponse>
 {
     public async Task<ApplySubscriberDeltaResponse> ExecuteAsync(
         ApplySubscriberDeltaRequest request,
@@ -41,6 +43,15 @@ public sealed class ApplySubscriberDeltaUseCase(IContentCaller caller, IPageRepo
         IdempotencyKey.Require(request.IdempotencyKey);
         _ = await pages.GetByIdAsync(PageId.From(request.PageId), cancellationToken)
             ?? throw new NotFoundException("Page was not found.");
-        throw new CounterUpdateDeferredException();
+
+        var update = await ledger.ApplySubscriberDeltaAsync(
+            request.PageId,
+            (int)request.Delta,
+            request.IdempotencyKey,
+            cancellationToken);
+        if (!update.Found)
+            throw new NotFoundException("Page was not found.");
+
+        return new ApplySubscriberDeltaResponse(request.PageId, update.SubscriberCount, update.Applied);
     }
 }

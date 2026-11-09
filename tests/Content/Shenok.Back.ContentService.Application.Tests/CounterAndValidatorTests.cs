@@ -26,7 +26,7 @@ namespace Shenok.Back.ContentService.Application.Tests;
 public class CounterAndValidatorTests
 {
     [Fact]
-    public async Task Unfollow_and_play_commands_are_accepted_then_left_unchanged()
+    public async Task Unfollow_and_play_commands_apply_once()
     {
         var caller = new FakeCaller { IsInternalService = true };
         var page = Page.CreateDraft(OwnerId.New(), PageTitle.Create("Show"), PageDescription.Create(null), null);
@@ -35,27 +35,38 @@ public class CounterAndValidatorTests
         var voiceStore = new FakeVoices();
         await pages.AddAsync(page);
         voiceStore.Add(voice);
-        var subscribers = new ApplySubscriberDeltaUseCase(caller, pages);
-        var plays = new IncrementPlayCountUseCase(caller, voiceStore);
+        var ledger = new FakeCounterLedger();
+        var subscribers = new ApplySubscriberDeltaUseCase(caller, pages, ledger);
+        var plays = new IncrementPlayCountUseCase(caller, voiceStore, ledger);
+        var key = $"{Guid.NewGuid():D}:{Guid.NewGuid():D}";
 
-        await Assert.ThrowsAsync<CounterUpdateDeferredException>(() =>
-            subscribers.ExecuteAsync(
-                new ApplySubscriberDeltaRequest(page.Id.Value, -1, $"{Guid.NewGuid():D}:{Guid.NewGuid():D}"),
-                CancellationToken.None));
+        var unfollow = await subscribers.ExecuteAsync(
+            new ApplySubscriberDeltaRequest(page.Id.Value, -1, key),
+            CancellationToken.None);
+        Assert.True(unfollow.Applied);
+        Assert.Equal(0, unfollow.SubscriberCount);
+        var duplicate = await subscribers.ExecuteAsync(
+            new ApplySubscriberDeltaRequest(page.Id.Value, -1, key),
+            CancellationToken.None);
+        Assert.False(duplicate.Applied);
+        Assert.Equal(0, duplicate.SubscriberCount);
+
         await Assert.ThrowsAsync<NotFoundException>(() =>
             subscribers.ExecuteAsync(
                 new ApplySubscriberDeltaRequest(Guid.NewGuid(), -1, $"{Guid.NewGuid():D}:{Guid.NewGuid():D}"),
                 CancellationToken.None));
         await Assert.ThrowsAsync<ConflictException>(() =>
             subscribers.ExecuteAsync(new ApplySubscriberDeltaRequest(page.Id.Value, -1, "bad key"), CancellationToken.None));
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            plays.ExecuteAsync(new IncrementPlayCountRequest(voice.Id.Value, ""), CancellationToken.None));
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            plays.ExecuteAsync(new IncrementPlayCountRequest(voice.Id.Value, Guid.Empty), CancellationToken.None));
-        await Assert.ThrowsAsync<NotFoundException>(() =>
-            plays.ExecuteAsync(new IncrementPlayCountRequest(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None));
+            plays.ExecuteAsync(new IncrementPlayCountRequest(Guid.NewGuid(), Guid.NewGuid().ToString("D")), CancellationToken.None));
         await Assert.ThrowsAsync<ForbiddenException>(() =>
-            new IncrementPlayCountUseCase(new FakeCaller(), voiceStore).ExecuteAsync(
-                new IncrementPlayCountRequest(voice.Id.Value, Guid.NewGuid()),
+            new IncrementPlayCountUseCase(new FakeCaller(), voiceStore, ledger).ExecuteAsync(
+                new IncrementPlayCountRequest(voice.Id.Value, Guid.NewGuid().ToString("D")),
                 CancellationToken.None));
+        Assert.Equal(2, ledger.SubscriberCalls);
+        Assert.Equal(0, ledger.PlayCalls);
     }
 
     [Fact]
@@ -75,7 +86,7 @@ public class CounterAndValidatorTests
         Assert.True(new IssuePlaylistValidator().Validate(new IssuePlaylistRequest(Guid.NewGuid(), null)).IsValid);
 
         Assert.False(new ApplySubscriberDeltaValidator().Validate(new ApplySubscriberDeltaRequest(Guid.NewGuid(), 5, "user:page")).IsValid);
-        Assert.False(new IncrementPlayCountValidator().Validate(new IncrementPlayCountRequest(Guid.Empty, Guid.NewGuid())).IsValid);
+        Assert.False(new IncrementPlayCountValidator().Validate(new IncrementPlayCountRequest(Guid.Empty, Guid.NewGuid().ToString("D"))).IsValid);
 
         var tooMany = Enumerable.Range(0, AudioLimits.MaxVoicesPerPage + 1).Select(_ => Guid.NewGuid()).ToArray();
         Assert.False(new ReorderVoicesValidator().Validate(new ReorderVoicesRequest(Guid.NewGuid(), tooMany)).IsValid);

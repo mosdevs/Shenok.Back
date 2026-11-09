@@ -99,17 +99,23 @@ internal sealed class FakeContentCounters : IContentCounters
 
     public List<(string PlaySessionId, Guid VoiceId)> Plays { get; } = [];
 
-    public Task ApplySubscriberDeltaAsync(Guid userId, Guid pageId, int delta, CancellationToken ct = default)
+    public Task ApplySubscriberDeltaAsync(Guid userId, Guid pageId, int delta, Guid commandId, CancellationToken ct = default)
     {
         SubscriberDeltas.Add((userId, pageId, delta));
         return Task.CompletedTask;
     }
 
-    public Task ApplyPlayAsync(string playSessionId, Guid voiceId, CancellationToken ct = default)
+    public Task DeliverPendingSubscriberAsync(Guid userId, Guid pageId, CancellationToken ct = default) =>
+        Task.CompletedTask;
+
+    public Task ApplyPlayAsync(string playSessionId, Guid voiceId, Guid commandId, CancellationToken ct = default)
     {
         Plays.Add((playSessionId, voiceId));
         return Task.CompletedTask;
     }
+
+    public Task DeliverPendingPlayAsync(string playSessionId, CancellationToken ct = default) =>
+        Task.CompletedTask;
 }
 
 internal sealed class FakeReceipts(EngagementMemory memory) : IScanReceiptRepository
