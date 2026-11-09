@@ -7,10 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Interfaces\" />
-    <Folder Include="IndexMaintenance\UseCases\AddIndexEntry\" />
-    <Folder Include="IndexMaintenance\UseCases\RemoveIndesEntry\" />
-    <Folder Include="Recognition\UseCases\RecognizeWaveform\" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.Application.Abstractions\Shenok.Back.Application.Abstractions.csproj" />
+    <!-- Application calls IWaveformDecoder. The codec reference lets a test build bar heights without ImageSharp. -->
+    <ProjectReference Include="..\..\..\Shared\Shenok.Back.WaveformCodec\Shenok.Back.WaveformCodec.csproj" />
+    <ProjectReference Include="..\Shenok.Back.RecognitionService.Domain\Shenok.Back.RecognitionService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

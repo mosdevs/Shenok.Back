@@ -157,7 +157,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget": {},
+    "C:\\Users\\Rivas\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -166,7 +166,7 @@
       "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
       "projectName": "Shenok.Back.ContentService.Application",
       "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
-      "packagesPath": "C:\\Users\\Rivas\\AppData\\Local\\Temp\\cursor-sandbox-cache\\476681c4ed680b1eb692f93b87197404\\nuget",
+      "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
       "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
