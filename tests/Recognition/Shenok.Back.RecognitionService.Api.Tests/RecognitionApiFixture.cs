@@ -121,6 +121,9 @@ public sealed class RecognitionApiFixture : IAsyncLifetime
         public Task<WaveformIndexEntry?> GetActiveAsync(WaveformCode code, CancellationToken ct = default)
             => Task.FromResult(code == _active.Code && _active.IsActive ? _active : null);
 
+        public Task<WaveformIndexEntry?> FindAsync(WaveformCode code, CancellationToken ct = default)
+            => Task.FromResult(code == _active.Code ? _active : null);
+
         public Task<WaveformIndexEntry?> GetAsync(WaveformCode code, CancellationToken ct = default)
             => Task.FromResult(code == _active.Code ? _active : null);
 

@@ -56,6 +56,8 @@ internal static class WaveformIndexApply
             {
                 return;
             }
+            // The last attempt does not match this filter, so IndexConcurrencyException
+            // propagates unchanged. The queue is the retry. Do not substitute another exception.
             catch (IndexConcurrencyException) when (attempt < MaxAttempts)
             {
                 logger.LogDebug(
@@ -65,8 +67,6 @@ internal static class WaveformIndexApply
                     request.EventId);
             }
         }
-
-        throw new InvalidOperationException("Waveform index apply ended without a result.");
     }
 
     private static async Task ApplyOnceAsync(
@@ -114,7 +114,7 @@ internal static class WaveformIndexApply
         return WaveformFact.Create(
             WaveformCode.From(request.WaveformCode),
             WaveformId.From(request.WaveformId),
-            ParseTarget(request.TargetType),
+            WaveformApplyRules.ParseTarget(request.TargetType),
             request.TargetId,
             request.LayoutVersion,
             occurredOn,
@@ -132,17 +132,6 @@ internal static class WaveformIndexApply
         DateTimeKind.Local => value.ToUniversalTime(),
         _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
     };
-
-    private static WaveformTargetType ParseTarget(string targetType)
-    {
-        if (Enum.TryParse<WaveformTargetType>(targetType, ignoreCase: false, out var parsed)
-            && Enum.IsDefined(parsed))
-        {
-            return parsed;
-        }
-
-        throw new ArgumentException("Target type must be Page or Voice.", nameof(targetType));
-    }
 }
 
 /// <summary>

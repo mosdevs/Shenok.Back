@@ -20,6 +20,7 @@ public class DecodeWaveformUseCaseTests
 
         Assert.Equal(DecodeWaveformUseCase.MissDetail, exception.Message);
         Assert.Equal(1, decoder.Calls);
+        Assert.Equal(0, store.Index.Finds);
         Assert.Equal(0, store.Index.ActiveGets);
         Assert.Equal(0, store.Index.Gets);
         Assert.Equal(0, store.Index.Adds);
@@ -41,6 +42,7 @@ public class DecodeWaveformUseCaseTests
             useCase.ExecuteAsync(Image(), CancellationToken.None));
 
         Assert.Equal(DecodeWaveformUseCase.MissDetail, exception.Message);
+        Assert.Equal(0, store.Index.Finds);
         Assert.Equal(0, store.Index.ActiveGets);
         Assert.Equal(0, store.Index.Gets);
         Assert.Equal(0, store.Index.Adds);
@@ -64,7 +66,8 @@ public class DecodeWaveformUseCaseTests
         Assert.Equal(
             [nameof(DecodeWaveformResponse.WaveformId), nameof(DecodeWaveformResponse.TargetType), nameof(DecodeWaveformResponse.TargetId)],
             typeof(DecodeWaveformResponse).GetProperties().Select(property => property.Name).ToArray());
-        Assert.Equal(1, store.Index.ActiveGets);
+        Assert.Equal(1, store.Index.Finds);
+        Assert.Equal(0, store.Index.ActiveGets);
         Assert.Equal(0, store.Index.Gets);
         Assert.Equal(0, store.Index.Adds);
     }
@@ -74,33 +77,91 @@ public class DecodeWaveformUseCaseTests
     {
         var store = new RecognitionFakes();
         store.Seed(Revoked(code: 42));
+        var logger = new RecordingLogger<DecodeWaveformUseCase>();
         var decoder = new FakeDecoder { Result = new WaveformDecodeResult.Success(42) };
-        var useCase = UseCase(store, decoder);
+        var useCase = new DecodeWaveformUseCase(decoder, store.Index, logger);
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             useCase.ExecuteAsync(Image(), CancellationToken.None));
 
         Assert.Equal(DecodeWaveformUseCase.MissDetail, exception.Message);
-        Assert.Equal(1, store.Index.ActiveGets);
-        Assert.Equal(1, store.Index.Gets);
+        Assert.Equal(1, store.Index.Finds);
+        Assert.Equal(0, store.Index.ActiveGets);
+        Assert.Equal(0, store.Index.Gets);
         Assert.Equal(0, store.Index.Adds);
         Assert.Equal(0, store.UnitOfWork.Attempts);
+        var entry = Assert.Single(logger.Entries);
+        Assert.Equal("revoked", entry.Reason);
+        Assert.Null(entry.Detail);
     }
 
     [Fact]
     public async Task An_unknown_code_is_the_same_miss()
     {
         var store = new RecognitionFakes();
+        var logger = new RecordingLogger<DecodeWaveformUseCase>();
         var decoder = new FakeDecoder { Result = new WaveformDecodeResult.Success(42) };
-        var useCase = UseCase(store, decoder);
+        var useCase = new DecodeWaveformUseCase(decoder, store.Index, logger);
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             useCase.ExecuteAsync(Image(), CancellationToken.None));
 
         Assert.Equal(DecodeWaveformUseCase.MissDetail, exception.Message);
-        Assert.Equal(1, store.Index.ActiveGets);
-        Assert.Equal(1, store.Index.Gets);
+        Assert.Equal(1, store.Index.Finds);
+        Assert.Equal(0, store.Index.ActiveGets);
+        Assert.Equal(0, store.Index.Gets);
         Assert.Equal(0, store.Index.Adds);
+        var entry = Assert.Single(logger.Entries);
+        Assert.Equal("unknown_code", entry.Reason);
+        Assert.Null(entry.Detail);
+    }
+
+    [Fact]
+    public async Task A_stable_decoder_reason_is_logged_and_any_other_reason_is_dropped()
+    {
+        var stable = new RecordingLogger<DecodeWaveformUseCase>();
+        var store = new RecognitionFakes();
+        var stableDecoder = new FakeDecoder { Result = new WaveformDecodeResult.Failure(WaveformDecodeResult.AnchorNotFound) };
+        var stableUseCase = new DecodeWaveformUseCase(stableDecoder, store.Index, stable);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            stableUseCase.ExecuteAsync(Image(), CancellationToken.None));
+
+        var stableEntry = Assert.Single(stable.Entries);
+        Assert.Equal("decode_failed", stableEntry.Reason);
+        Assert.Equal(WaveformDecodeResult.AnchorNotFound, stableEntry.Detail);
+
+        var hostileReason = "codec failed\r\npassword=secret";
+        var hostile = new RecordingLogger<DecodeWaveformUseCase>();
+        var hostileDecoder = new FakeDecoder { Result = new WaveformDecodeResult.Failure(hostileReason) };
+        var hostileUseCase = new DecodeWaveformUseCase(hostileDecoder, store.Index, hostile);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            hostileUseCase.ExecuteAsync(Image(), CancellationToken.None));
+
+        var hostileEntry = Assert.Single(hostile.Entries);
+        Assert.Equal("decode_failed", hostileEntry.Reason);
+        Assert.Null(hostileEntry.Detail);
+        Assert.DoesNotContain("password", hostileEntry.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("\n", hostileEntry.Message, StringComparison.Ordinal);
+        Assert.Equal(0, store.Index.Finds);
+    }
+
+    [Fact]
+    public async Task An_out_of_range_code_logs_decode_failed_without_the_number()
+    {
+        var logger = new RecordingLogger<DecodeWaveformUseCase>();
+        var store = new RecognitionFakes();
+        var decoder = new FakeDecoder { Result = new WaveformDecodeResult.Success(0) };
+        var useCase = new DecodeWaveformUseCase(decoder, store.Index, logger);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            useCase.ExecuteAsync(Image(), CancellationToken.None));
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.Equal("decode_failed", entry.Reason);
+        Assert.Null(entry.Detail);
+        Assert.DoesNotContain("0", entry.Message, StringComparison.Ordinal);
     }
 
     private static DecodeWaveformUseCase UseCase(RecognitionFakes store, FakeDecoder decoder)

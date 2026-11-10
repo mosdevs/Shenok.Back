@@ -20,17 +20,7 @@ public sealed record ApplyWaveformRevokedRequest(
 public sealed class ApplyWaveformRevokedValidator : AbstractValidator<ApplyWaveformRevokedRequest>
 {
     public ApplyWaveformRevokedValidator()
-    {
-        RuleFor(request => request.EventId).NotEmpty();
-        RuleFor(request => request.WaveformId).NotEmpty();
-        RuleFor(request => request.TargetId).NotEmpty();
-        RuleFor(request => request.WaveformCode).InclusiveBetween(1L, WaveformCode.MaxValue);
-        RuleFor(request => request.LayoutVersion).GreaterThanOrEqualTo(LayoutVersion.Version1);
-        RuleFor(request => request.TargetType)
-            .Must(type => type is nameof(WaveformTargetType.Page) or nameof(WaveformTargetType.Voice))
-            .WithMessage("Target type must be Page or Voice.");
-        RuleFor(request => request.OccurredOn).Must(occurredOn => occurredOn != default);
-    }
+        => WaveformApplyRules.Add(this);
 }
 
 /// <summary>

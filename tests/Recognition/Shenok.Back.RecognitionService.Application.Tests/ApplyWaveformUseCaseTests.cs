@@ -114,6 +114,28 @@ public class ApplyWaveformUseCaseTests
         Assert.Contains(harness.Store.Inbox.Messages, message => message.EventId == older.EventId);
     }
 
+    [Theory]
+    [InlineData("0")]
+    [InlineData("1")]
+    [InlineData("page")]
+    public async Task A_target_that_is_not_page_or_voice_is_rejected_before_any_write(string targetType)
+    {
+        var harness = new ApplyHarness();
+
+        var registered = await Assert.ThrowsAsync<ArgumentException>(() =>
+            harness.Register.ExecuteAsync(RegisterRequest() with { TargetType = targetType }, CancellationToken.None));
+        var revoked = await Assert.ThrowsAsync<ArgumentException>(() =>
+            harness.Revoke.ExecuteAsync(RevokeRequest() with { TargetType = targetType }, CancellationToken.None));
+
+        Assert.Equal("targetType", registered.ParamName);
+        Assert.Equal("targetType", revoked.ParamName);
+        Assert.Equal(0, harness.Store.Index.Adds);
+        Assert.Equal(0, harness.Store.Inbox.Adds);
+        Assert.Equal(0, harness.Store.UnitOfWork.Attempts);
+        Assert.Equal(0, harness.Store.Index.Count);
+        Assert.Equal(0, harness.Store.Inbox.Count);
+    }
+
     [Fact]
     public async Task Register_normalizes_local_and_unspecified_timestamps_to_utc()
     {

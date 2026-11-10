@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Shenok.Back.RecognitionService.Application.Common;
 using Shenok.Back.RecognitionService.Application.Common.Interfaces;
 using Shenok.Back.RecognitionService.Domain.Aggregates.WaveformIndex;
@@ -53,6 +54,9 @@ internal sealed class RecognitionFakes
         _pendingInbox.Clear();
     }
 
+    internal WaveformIndexEntry? FindCommitted(WaveformCode code)
+        => _rows.GetValueOrDefault(code.Value);
+
     internal WaveformIndexEntry? Find(WaveformCode code)
     {
         foreach (var pending in _pendingRows)
@@ -99,6 +103,8 @@ internal sealed class FakeWaveformIndex(RecognitionFakes store) : IWaveformIndex
 
     public int ActiveGets { get; private set; }
 
+    public int Finds { get; private set; }
+
     public int Count => store.CommittedRows;
 
     public Task<WaveformIndexEntry?> GetActiveAsync(WaveformCode code, CancellationToken ct = default)
@@ -108,6 +114,14 @@ internal sealed class FakeWaveformIndex(RecognitionFakes store) : IWaveformIndex
         ActiveGets++;
         var row = store.Find(code);
         return Task.FromResult(row is { IsActive: true } ? row : null);
+    }
+
+    public Task<WaveformIndexEntry?> FindAsync(WaveformCode code, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(code);
+        Finds++;
+        return Task.FromResult(store.FindCommitted(code));
     }
 
     public Task<WaveformIndexEntry?> GetAsync(WaveformCode code, CancellationToken ct = default)
@@ -184,6 +198,49 @@ internal sealed class FakeUnitOfWork(RecognitionFakes store) : IUnitOfWork
         return Task.FromResult(1);
     }
 }
+
+internal sealed class RecordingLogger<T> : ILogger<T>
+{
+    public List<RecordedLog> Entries { get; } = [];
+
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull => EmptyScope.Instance;
+
+    public bool IsEnabled(LogLevel logLevel) => true;
+
+    public void Log<TState>(
+        LogLevel logLevel,
+        EventId eventId,
+        TState state,
+        Exception? exception,
+        Func<TState, Exception?, string> formatter)
+    {
+        string? reason = null;
+        string? detail = null;
+        if (state is IEnumerable<KeyValuePair<string, object?>> values)
+        {
+            foreach (var pair in values)
+            {
+                if (pair.Key == "Reason")
+                    reason = pair.Value?.ToString();
+                else if (pair.Key == "Detail")
+                    detail = pair.Value?.ToString();
+            }
+        }
+
+        Entries.Add(new RecordedLog(logLevel, reason, detail, formatter(state, exception)));
+    }
+
+    private sealed class EmptyScope : IDisposable
+    {
+        public static readonly EmptyScope Instance = new();
+
+        public void Dispose()
+        {
+        }
+    }
+}
+
+internal readonly record struct RecordedLog(LogLevel Level, string? Reason, string? Detail, string Message);
 
 internal sealed class FakeDecoder : IWaveformDecoder
 {

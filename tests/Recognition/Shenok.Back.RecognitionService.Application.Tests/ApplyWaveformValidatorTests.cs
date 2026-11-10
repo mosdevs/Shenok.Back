@@ -25,6 +25,8 @@ public class ApplyWaveformValidatorTests
         AssertInvalid(registered, revoked, legal with { WaveformCode = WaveformCode.MaxValue + 1 });
         AssertInvalid(registered, revoked, legal with { LayoutVersion = 0 });
         AssertInvalid(registered, revoked, legal with { TargetType = "page" });
+        AssertInvalid(registered, revoked, legal with { TargetType = "0" });
+        AssertInvalid(registered, revoked, legal with { TargetType = "1" });
         AssertInvalid(registered, revoked, legal with { TargetType = "image/jpeg; charset=binary" });
         AssertInvalid(registered, revoked, legal with { OccurredOn = default });
     }

@@ -15,6 +15,14 @@ public sealed class WaveformIndexRepository(RecognitionDbContext db) : IWaveform
             .FirstOrDefaultAsync(entry => entry.Code == code, ct);
     }
 
+    public Task<WaveformIndexEntry?> FindAsync(WaveformCode code, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+        return db.WaveformIndex
+            .AsNoTracking()
+            .FirstOrDefaultAsync(entry => entry.Code == code, ct);
+    }
+
     public Task<WaveformIndexEntry?> GetAsync(WaveformCode code, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(code);

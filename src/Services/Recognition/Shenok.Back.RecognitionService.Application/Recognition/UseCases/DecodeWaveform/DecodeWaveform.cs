@@ -44,7 +44,7 @@ public sealed class DecodeWaveformValidator : AbstractValidator<DecodeWaveformRe
 /// Resolves a camera image to the active index row.
 /// A decode failure, a code outside the 40-bit window, an unknown code, and a revoked code
 /// are the same <see cref="NotFoundException"/> with detail <see cref="MissDetail"/>.
-/// A scan does not open an inbox row and does not write the index.
+/// The lookup is the no-tracking <c>FindAsync</c> read. A scan does not open an inbox row and does not write the index.
 /// </summary>
 public sealed class DecodeWaveformUseCase(
     IWaveformDecoder decoder,
@@ -56,7 +56,6 @@ public sealed class DecodeWaveformUseCase(
     private const string DecodeFailed = "decode_failed";
     private const string UnknownCode = "unknown_code";
     private const string Revoked = "revoked";
-    private const string CodeOutOfRange = "code_out_of_range";
 
     public async Task<DecodeWaveformResponse> ExecuteAsync(
         DecodeWaveformRequest request,
@@ -68,7 +67,7 @@ public sealed class DecodeWaveformUseCase(
         switch (decoded)
         {
             case WaveformDecodeResult.Failure failure:
-                LogMiss(DecodeFailed, failure.Reason);
+                LogDecodeFailed(StableDetail(failure.Reason));
                 throw new NotFoundException(MissDetail);
             case WaveformDecodeResult.Success success:
                 return await MatchAsync(success.Code, cancellationToken);
@@ -86,36 +85,48 @@ public sealed class DecodeWaveformUseCase(
         }
         catch (InvalidWaveformCodeException)
         {
-            LogMiss(DecodeFailed, CodeOutOfRange);
+            LogDecodeFailed(detail: null);
             throw new NotFoundException(MissDetail);
         }
 
-        var active = await index.GetActiveAsync(code, cancellationToken);
-        if (active is null)
+        var stored = await index.FindAsync(code, cancellationToken);
+        if (stored is { IsActive: true })
         {
-            var stored = await index.GetAsync(code, cancellationToken);
-            var reason = stored is { Status: WaveformIndexStatus.Revoked } ? Revoked : UnknownCode;
-            LogMiss(reason, detail: null);
-            throw new NotFoundException(MissDetail);
+            return new DecodeWaveformResponse(
+                stored.WaveformId.Value,
+                stored.TargetType.ToString(),
+                stored.TargetId);
         }
 
-        return new DecodeWaveformResponse(
-            active.WaveformId.Value,
-            active.TargetType.ToString(),
-            active.TargetId);
+        LogMiss(stored is { Status: WaveformIndexStatus.Revoked } ? Revoked : UnknownCode);
+        throw new NotFoundException(MissDetail);
     }
 
-    private void LogMiss(string reason, string? detail)
+    /// <summary>
+    /// The four decoder words are safe to log. Anything else, including an exception message, is dropped.
+    /// </summary>
+    private static string? StableDetail(string? reason)
+        => reason is WaveformDecodeResult.AnchorNotFound
+            or WaveformDecodeResult.CodecFailed
+            or WaveformDecodeResult.ImageUnreadable
+            or WaveformDecodeResult.Dimensions
+            ? reason
+            : null;
+
+    private void LogDecodeFailed(string? detail)
     {
         if (detail is null)
         {
-            logger.LogInformation("No waveform matched. Reason: {Reason}.", reason);
+            logger.LogInformation("No waveform matched. Reason: {Reason}.", DecodeFailed);
             return;
         }
 
         logger.LogInformation(
             "No waveform matched. Reason: {Reason}. Detail: {Detail}.",
-            reason,
+            DecodeFailed,
             detail);
     }
+
+    private void LogMiss(string reason)
+        => logger.LogInformation("No waveform matched. Reason: {Reason}.", reason);
 }

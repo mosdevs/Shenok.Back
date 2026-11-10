@@ -99,6 +99,35 @@ public sealed class IndexPersistenceTests(InfrastructureFixture fixture)
     }
 
     [RequiresPostgresFact]
+    public async Task FindAsync_reads_a_revoked_row_and_does_not_track_it()
+    {
+        var code = NextCode();
+        await using (var seed = fixture.CreateContext())
+        {
+            seed.WaveformIndex.Add(WaveformIndexEntry.RevokeFirst(Fact(code)));
+            await seed.SaveChangesAsync();
+        }
+
+        await using var scope = fixture.CreateScope();
+        var index = scope.ServiceProvider.GetRequiredService<IWaveformIndexRepository>();
+        var db = scope.ServiceProvider.GetRequiredService<RecognitionDbContext>();
+        var storedCode = WaveformCode.From(code);
+
+        var snapshot = await index.FindAsync(storedCode);
+        Assert.NotNull(snapshot);
+        Assert.Equal(WaveformIndexStatus.Revoked, snapshot.Status);
+        Assert.False(snapshot.IsActive);
+        Assert.Empty(db.ChangeTracker.Entries());
+
+        Assert.Null(await index.GetActiveAsync(storedCode));
+        Assert.Empty(db.ChangeTracker.Entries());
+
+        var tracked = await index.GetAsync(storedCode);
+        Assert.NotNull(tracked);
+        Assert.Equal(EntityState.Unchanged, db.Entry(tracked).State);
+    }
+
+    [RequiresPostgresFact]
     public async Task A_lost_xmin_update_throws_and_keeps_the_first_write()
     {
         var code = NextCode();
