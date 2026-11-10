@@ -1,17 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shenok.Back.Gateway.Application.Playback.UseCases.OpenPlaylist;
+using Shenok.Back.Gateway.Application.Playback.UseCases.OpenSegment;
 
 namespace Shenok.Back.Gateway.Api.Controllers;
 
 [ApiController]
-public sealed class PlaylistsController(OpenPlaylistUseCase openPlaylist) : ControllerBase
+public sealed class PlaylistsController(OpenPlaylistUseCase openPlaylist, OpenSegmentUseCase openSegment) : ControllerBase
 {
+    private const string SegmentMediaType = "video/mp2t";
+
     [AllowAnonymous]
     [HttpGet("/audio/{voiceId:guid}/playlist.m3u8")]
     public async Task<IActionResult> Get(
         Guid voiceId,
-        Guid waveformId,
+        Guid? waveformId,
         long exp,
         string? sig,
         CancellationToken cancellationToken)
@@ -21,5 +24,25 @@ public sealed class PlaylistsController(OpenPlaylistUseCase openPlaylist) : Cont
             cancellationToken);
         Response.Headers.CacheControl = "no-store";
         return Content(opened.Playlist, "application/vnd.apple.mpegurl");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/audio/{voiceId:guid}/segments/{*path}")]
+    public async Task<IActionResult> Segment(
+        Guid voiceId,
+        string? path,
+        long exp,
+        string? sig,
+        CancellationToken cancellationToken)
+    {
+        var opened = await openSegment.ExecuteAsync(
+            new OpenSegmentRequest(voiceId, path, exp, sig ?? string.Empty),
+            cancellationToken);
+        Response.Headers.CacheControl = "no-store";
+        Response.ContentLength = opened.Length;
+        return new FileStreamResult(opened.Content, SegmentMediaType)
+        {
+            EnableRangeProcessing = false
+        };
     }
 }

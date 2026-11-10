@@ -8,7 +8,7 @@ namespace Shenok.Back.Gateway.Application.Scans.UseCases.ScanWaveform;
 
 public sealed record ScanWaveformRequest(Guid UserId, string ScanId, string ContentType, byte[] Image);
 
-public sealed record ScanVoiceDocument(Guid Id, string Title, string? AudioUrl, double? Duration);
+public sealed record ScanVoiceDocument(Guid Id, string Title, string AudioUrl, double? Duration);
 
 public sealed record ScanPageDocument(Guid Id, string Title);
 
@@ -46,9 +46,12 @@ public sealed class ScanWaveformValidator : AbstractValidator<ScanWaveformReques
 }
 
 /// <summary>
-/// Flow B. A miss stops before Content or Engagement. The scan does not follow.
-/// Engagement keeps the scan id unique. This use case does not reject an archived page before unlock;
-/// Content still refuses playback for that page when the playlist is issued.
+/// Flow B. A miss, an empty page, or an archived page stops before Engagement.
+/// The playlist is issued before <c>RegisterScan</c> on every attempt, including a retry.
+/// Engagement's scan response does not say whether the receipt was new, so the Gateway cannot
+/// issue the playlist only after a repeat. Content's rejection therefore never unlocks.
+/// A repeat still calls <c>RegisterScan</c>, which returns the stored snapshot and does not unlock again.
+/// The scan does not follow. The playlist text stays out of the JSON.
 /// </summary>
 public sealed class ScanWaveformUseCase(
     IScanDecoder decoder,
@@ -67,6 +70,13 @@ public sealed class ScanWaveformUseCase(
             throw new NotFoundException(GatewayLimits.MissDetail);
 
         var resolved = await ResolveAsync(hit, cancellationToken);
+        if (IsArchived(resolved.Page.Status))
+            throw new ForbiddenException(GatewayLimits.ArchivedScanDetail);
+
+        var issued = await content.IssuePlaylistAsync(
+            resolved.Voice.VoiceId,
+            hit.WaveformId,
+            cancellationToken);
         var unlock = await engagement.RegisterScanAsync(
             request.ScanId.Trim(),
             hit.WaveformId,
@@ -74,21 +84,11 @@ public sealed class ScanWaveformUseCase(
             resolved.Page.PageId,
             cancellationToken);
 
-        string? audioUrl = null;
-        if (IsReady(resolved.Voice.PackagingStatus))
-        {
-            var issued = await content.IssuePlaylistAsync(
-                resolved.Voice.VoiceId,
-                hit.WaveformId,
-                cancellationToken);
-            audioUrl = links.PlaylistUrl(resolved.Voice.VoiceId, hit.WaveformId, issued.ExpiresUnixSeconds);
-        }
-
         return new ScanWaveformResponse(
             new ScanVoiceDocument(
                 resolved.Voice.VoiceId,
                 resolved.Voice.Title,
-                audioUrl,
+                links.PlaylistUrl(resolved.Voice.VoiceId, hit.WaveformId, issued.ExpiresUnixSeconds),
                 resolved.Voice.DurationSeconds),
             new ScanPageDocument(resolved.Page.PageId, resolved.Page.Title),
             unlock.PromptFollow,
@@ -118,8 +118,8 @@ public sealed class ScanWaveformUseCase(
         throw new NotFoundException(GatewayLimits.MissDetail);
     }
 
-    private static bool IsReady(string? status) =>
-        string.Equals(status, GatewayLimits.ReadyPackaging, StringComparison.OrdinalIgnoreCase);
+    private static bool IsArchived(string? status) =>
+        string.Equals(status, GatewayLimits.ArchivedStatus, StringComparison.OrdinalIgnoreCase);
 
     private readonly record struct ResolvedTarget(CatalogPage Page, CatalogVoice Voice);
 }

@@ -54,6 +54,7 @@ public sealed class ScanWaveformTests
     {
         var content = PageContent(firstReady: true);
         var engagement = new FakeEngagement { Unlock = new ScanUnlock(true, 12) };
+        content.OnIssue = () => Assert.Empty(engagement.Scans);
         var useCase = UseCase(PageHit(), content, engagement);
 
         var response = await useCase.ExecuteAsync(Request("  scan-1  "u8.ToArray()), CancellationToken.None);
@@ -67,6 +68,7 @@ public sealed class ScanWaveformTests
         Assert.Equal(12, response.ResumePositionSeconds);
         Assert.Contains("sig=test", response.Voice.AudioUrl, StringComparison.Ordinal);
         Assert.Contains("exp=1700000000", response.Voice.AudioUrl, StringComparison.Ordinal);
+        Assert.Contains("waveformId=", response.Voice.AudioUrl, StringComparison.Ordinal);
         var scan = Assert.Single(engagement.Scans);
         Assert.Equal("scan-1", scan.ScanId);
         Assert.Equal(_waveformId, scan.WaveformId);
@@ -78,18 +80,40 @@ public sealed class ScanWaveformTests
     }
 
     [Fact]
-    public async Task Pending_voice_unlocks_without_a_playlist()
+    public async Task Playlist_rejection_does_not_register_a_scan()
     {
         var content = PageContent(firstReady: false);
+        content.PlaylistFailure = new ConflictException("Voice cannot be played while packaging is Pending.");
         var engagement = new FakeEngagement();
         var useCase = UseCase(PageHit(), content, engagement);
 
-        var response = await useCase.ExecuteAsync(Request([1]), CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<ConflictException>(() =>
+            useCase.ExecuteAsync(Request([1]), CancellationToken.None));
 
-        Assert.Null(response.Voice.AudioUrl);
+        Assert.Equal("Voice cannot be played while packaging is Pending.", exception.Message);
         Assert.Empty(content.Playlists);
-        Assert.Single(engagement.Scans);
+        Assert.Empty(engagement.Scans);
+        Assert.Equal(0, engagement.Unlocks);
         Assert.Empty(engagement.Follows);
+    }
+
+    [Fact]
+    public async Task Archived_page_does_not_call_engagement_or_issue_a_playlist()
+    {
+        var content = PageContent(firstReady: true);
+        var page = content.Page ?? throw new InvalidOperationException("The test page was not arranged.");
+        content.Page = page with { Status = GatewayLimits.ArchivedStatus };
+        var engagement = new FakeEngagement();
+        var useCase = UseCase(PageHit(), content, engagement);
+
+        var exception = await Assert.ThrowsAsync<ForbiddenException>(() =>
+            useCase.ExecuteAsync(Request([1]), CancellationToken.None));
+
+        Assert.Equal(GatewayLimits.ArchivedScanDetail, exception.Message);
+        Assert.NotEmpty(content.Pages);
+        Assert.Empty(content.Playlists);
+        Assert.Empty(engagement.Scans);
+        Assert.Equal(0, engagement.Unlocks);
     }
 
     [Fact]
@@ -132,16 +156,20 @@ public sealed class ScanWaveformTests
     }
 
     [Fact]
-    public async Task Repeat_calls_register_scan_again_and_still_does_not_follow()
+    public async Task Repeat_issues_a_playlist_again_and_unlocks_once()
     {
-        var content = PageContent(firstReady: false);
+        var content = PageContent(firstReady: true);
         var engagement = new FakeEngagement();
         var useCase = UseCase(PageHit(), content, engagement);
 
-        await useCase.ExecuteAsync(Request([1]), CancellationToken.None);
-        await useCase.ExecuteAsync(Request([1]), CancellationToken.None);
+        var first = await useCase.ExecuteAsync(Request([1]), CancellationToken.None);
+        var second = await useCase.ExecuteAsync(Request([1]), CancellationToken.None);
 
+        Assert.Equal(first.PromptFollow, second.PromptFollow);
+        Assert.Equal(first.ResumePositionSeconds, second.ResumePositionSeconds);
+        Assert.Equal(2, content.Playlists.Count);
         Assert.Equal(2, engagement.Scans.Count);
+        Assert.Equal(1, engagement.Unlocks);
         Assert.All(engagement.Scans, scan => Assert.Equal("scan-1", scan.ScanId));
         Assert.Empty(engagement.Follows);
     }

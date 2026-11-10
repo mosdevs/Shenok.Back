@@ -126,13 +126,14 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
     }
 
     [Fact]
-    public async Task Pending_voice_scan_has_no_audio_url_and_does_not_issue_a_playlist()
+    public async Task Playlist_rejection_does_not_unlock()
     {
         var catalog = new Catalog { FirstStatus = "Pending" };
         try
         {
             catalog.Attach(api);
             var token = TestTokens.Create(catalog.Listener, roles: ["Listener"]);
+            var engagement = api.Engagement.Calls;
             var contentBefore = api.Content.History.Count;
 
             using var response = await api.SendAsync(
@@ -141,11 +142,46 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
                 bearer: token,
                 content: Scan("scan-pending", Encoding.UTF8.GetBytes($"fixture:page:{catalog.Waveform:D}:{catalog.Page:D}")));
 
-            var body = await ApiJson.ReadAsync(response);
-            Assert.Equal(JsonValueKind.Null, body.GetProperty("voice").GetProperty("audioUrl").ValueKind);
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+            Assert.Equal(
+                "Voice cannot be played while packaging is Pending.",
+                (await ApiJson.ReadAsync(response)).GetProperty("detail").GetString());
+            Assert.Contains(
+                api.Content.History.Skip(contentBefore),
+                call => call.Target.Contains("/internal/playback", StringComparison.Ordinal));
+            Assert.Equal(engagement, api.Engagement.Calls);
+        }
+        finally
+        {
+            Clear();
+        }
+    }
+
+    [Fact]
+    public async Task Archived_page_does_not_unlock()
+    {
+        var catalog = new Catalog { PageStatus = "Archived" };
+        try
+        {
+            catalog.Attach(api);
+            var token = TestTokens.Create(catalog.Listener, roles: ["Listener"]);
+            var engagement = api.Engagement.Calls;
+            var contentBefore = api.Content.History.Count;
+
+            using var response = await api.SendAsync(
+                HttpMethod.Post,
+                "/scans",
+                bearer: token,
+                content: Scan("scan-archived", Encoding.UTF8.GetBytes($"fixture:page:{catalog.Waveform:D}:{catalog.Page:D}")));
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+            Assert.Equal(
+                "Archived pages are hidden from new scans.",
+                (await ApiJson.ReadAsync(response)).GetProperty("detail").GetString());
             Assert.DoesNotContain(
                 api.Content.History.Skip(contentBefore),
                 call => call.Target.Contains("/internal/playback", StringComparison.Ordinal));
+            Assert.Equal(engagement, api.Engagement.Calls);
         }
         finally
         {
@@ -182,15 +218,16 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
     }
 
     [Fact]
-    public async Task Repeating_a_scan_calls_register_again_and_does_not_follow()
+    public async Task Repeating_a_scan_issues_a_playlist_again_and_does_not_follow()
     {
-        var catalog = new Catalog { FirstStatus = "Pending" };
+        var catalog = new Catalog();
         try
         {
             catalog.Attach(api);
             var token = TestTokens.Create(catalog.Listener, roles: ["Listener"]);
             var image = Encoding.UTF8.GetBytes($"fixture:page:{catalog.Waveform:D}:{catalog.Page:D}");
             var before = api.Engagement.History.Count;
+            var contentBefore = api.Content.History.Count;
 
             using var first = await api.SendAsync(HttpMethod.Post, "/scans", bearer: token, content: Scan("same-scan", image));
             using var second = await api.SendAsync(HttpMethod.Post, "/scans", bearer: token, content: Scan("same-scan", image));
@@ -203,7 +240,13 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
             {
                 Assert.EndsWith("/internal/scans", call.Target, StringComparison.Ordinal);
                 Assert.Contains("same-scan", call.Body, StringComparison.Ordinal);
+                Assert.DoesNotContain("/follow", call.Target, StringComparison.Ordinal);
             });
+            var playlists = api.Content.History
+                .Skip(contentBefore)
+                .Where(call => call.Target.Contains("/internal/playback", StringComparison.Ordinal))
+                .ToArray();
+            Assert.Equal(2, playlists.Length);
         }
         finally
         {
@@ -452,6 +495,8 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
 
         public string FirstStatus { get; set; } = "Ready";
 
+        public string PageStatus { get; set; } = "Published";
+
         public void Attach(GatewayApiFixture api)
         {
             api.Content.Handle = Content;
@@ -463,6 +508,9 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
             var path = request.RequestUri?.AbsolutePath ?? string.Empty;
             if (path.Contains("/internal/playback", StringComparison.Ordinal))
             {
+                if (!string.Equals(FirstStatus, "Ready", StringComparison.Ordinal))
+                    return Problem(HttpStatusCode.Conflict, "Voice cannot be played while packaging is Pending.");
+
                 return Json($$"""
                     {
                       "voiceId": "{{First:D}}",
@@ -498,7 +546,7 @@ public sealed class PublicRouteTests(GatewayApiFixture api)
                   "title": "Show",
                   "description": "A show",
                   "coverImageUrl": "https://cdn.example/cover.jpg",
-                  "status": "Published",
+                  "status": "{{PageStatus}}",
                   "createdAt": "2026-11-09T00:00:00Z",
                   "subscriberCount": 42,
                   "voices": [

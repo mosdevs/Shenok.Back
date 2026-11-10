@@ -31,6 +31,7 @@ internal static class DownstreamClients
         AddClient(services, GatewayClients.Engagement, settings.EngagementBaseUrl, settings.JsonTimeout);
         services.AddSingleton<IContentGateway, HttpContentGateway>();
         services.AddSingleton<IEngagementGateway, HttpEngagementGateway>();
+        services.AddSingleton<IIdentityClient, HttpIdentityClient>();
         services.AddSingleton<IPlaybackLink, PlaybackLink>();
 
         if (settings.RecognitionBaseUrl is Uri recognition)

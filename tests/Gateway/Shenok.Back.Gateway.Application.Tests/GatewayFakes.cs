@@ -22,11 +22,19 @@ internal sealed class FakeContent : IContentGateway
 
     public IssuedPlaylist Playlist { get; set; } = new("#EXTM3U\n", 1_700_000_000);
 
+    public Exception? PlaylistFailure { get; set; }
+
+    public Action? OnIssue { get; set; }
+
     public List<Guid> Pages { get; } = [];
 
     public List<Guid> Voices { get; } = [];
 
-    public List<(Guid VoiceId, Guid WaveformId)> Playlists { get; } = [];
+    public List<(Guid VoiceId, Guid? WaveformId)> Playlists { get; } = [];
+
+    public List<string> Segments { get; } = [];
+
+    public List<string> Commands { get; } = [];
 
     public Task<CatalogPage> GetPageAsync(Guid pageId, CancellationToken cancellationToken)
     {
@@ -46,10 +54,78 @@ internal sealed class FakeContent : IContentGateway
         return Task.FromResult(Voice);
     }
 
-    public Task<IssuedPlaylist> IssuePlaylistAsync(Guid voiceId, Guid waveformId, CancellationToken cancellationToken)
+    public Task<IssuedPlaylist> IssuePlaylistAsync(Guid voiceId, Guid? waveformId, CancellationToken cancellationToken)
     {
+        OnIssue?.Invoke();
+        if (PlaylistFailure is not null)
+            throw PlaylistFailure;
+
         Playlists.Add((voiceId, waveformId));
         return Task.FromResult(Playlist);
+    }
+
+    public Task<OpenedSegment> OpenSegmentAsync(Guid voiceId, string relativePath, CancellationToken cancellationToken)
+    {
+        Segments.Add(relativePath);
+        var bytes = new byte[] { 9, 8, 7 };
+        return Task.FromResult(new OpenedSegment(new MemoryStream(bytes, writable: false), bytes.Length));
+    }
+
+    public Task<ProxiedResponse> CreatePageAsync(
+        string? title,
+        string? description,
+        string? coverImageUrl,
+        CancellationToken cancellationToken) =>
+        Record("create-page");
+
+    public Task<ProxiedResponse> UpdatePageAsync(
+        Guid pageId,
+        string? title,
+        string? description,
+        string? coverImageUrl,
+        CancellationToken cancellationToken) =>
+        Record("update-page");
+
+    public Task<ProxiedResponse> PublishPageAsync(Guid pageId, CancellationToken cancellationToken) =>
+        Record("publish-page");
+
+    public Task<ProxiedResponse> ArchivePageAsync(Guid pageId, CancellationToken cancellationToken) =>
+        Record("archive-page");
+
+    public Task<ProxiedResponse> ReorderVoicesAsync(
+        Guid pageId,
+        IReadOnlyList<Guid>? voiceIds,
+        CancellationToken cancellationToken) =>
+        Record("reorder");
+
+    public Task<ProxiedResponse> AddVoiceAsync(Guid pageId, Guid voiceId, CancellationToken cancellationToken) =>
+        Record("add-voice");
+
+    public Task<ProxiedResponse> UploadVoiceAsync(
+        Guid pageId,
+        string? title,
+        string? contentType,
+        long sizeBytes,
+        Stream content,
+        CancellationToken cancellationToken) =>
+        Record("upload");
+
+    public Task<ProxiedResponse> UpdateVoiceTitleAsync(Guid voiceId, string? title, CancellationToken cancellationToken) =>
+        Record("update-voice");
+
+    public Task<ProxiedResponse> RegisterWaveformAsync(
+        string? targetType,
+        Guid targetId,
+        CancellationToken cancellationToken) =>
+        Record("register-waveform");
+
+    public Task<ProxiedResponse> RevokeWaveformAsync(Guid waveformId, CancellationToken cancellationToken) =>
+        Record("revoke-waveform");
+
+    private Task<ProxiedResponse> Record(string command)
+    {
+        Commands.Add(command);
+        return Task.FromResult(new ProxiedResponse(204, null, []));
     }
 }
 
@@ -64,6 +140,10 @@ internal sealed class FakeEngagement : IEngagementGateway
     public List<ListeningVoice> Listening { get; } = [];
 
     public List<(string ScanId, Guid WaveformId, Guid VoiceId, Guid PageId)> Scans { get; } = [];
+
+    public int Unlocks { get; private set; }
+
+    private readonly HashSet<string> _receipts = new(StringComparer.Ordinal);
 
     public List<Guid> Follows { get; } = [];
 
@@ -81,6 +161,9 @@ internal sealed class FakeEngagement : IEngagementGateway
         CancellationToken cancellationToken)
     {
         Scans.Add((scanId, waveformId, voiceId, pageId));
+        if (_receipts.Add(scanId))
+            Unlocks++;
+
         return Task.FromResult(Unlock);
     }
 
@@ -126,8 +209,17 @@ internal sealed class FakeLinks : IPlaybackLink
     public string PlaylistUrl(Guid voiceId, Guid waveformId, long expiresUnixSeconds) =>
         $"https://playback.test/audio/{voiceId:D}/playlist.m3u8?waveformId={waveformId:D}&exp={expiresUnixSeconds}&sig=test";
 
+    public string PlaylistUrl(Guid voiceId, long expiresUnixSeconds) =>
+        $"https://playback.test/audio/{voiceId:D}/playlist.m3u8?exp={expiresUnixSeconds}&sig=test";
+
     public bool SignatureMatches(Guid voiceId, Guid waveformId, long expiresUnixSeconds, string signature) =>
+        signature == "test" && waveformId != Guid.Empty;
+
+    public bool SignatureMatches(Guid voiceId, long expiresUnixSeconds, string signature) =>
         signature == "test";
+
+    public bool SegmentSignatureMatches(Guid voiceId, string relativePath, long expiresUnixSeconds, string signature) =>
+        signature == "test" && voiceId != Guid.Empty && !string.IsNullOrWhiteSpace(relativePath);
 }
 
 internal sealed class FixedClock(DateTimeOffset utcNow) : TimeProvider
