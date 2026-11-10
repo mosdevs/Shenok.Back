@@ -1,5 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Shenok.Back.Api.Shared.Security;
+using Shenok.Back.ContentService.Api.Controllers;
+using Shenok.Back.ContentService.Application.Common.Interfaces;
+using Shenok.Back.ContentService.Infrastructure.Storage;
 
 namespace Shenok.Back.ContentService.Api.Tests;
 
@@ -36,5 +39,15 @@ public sealed class ContentHostTests
         Assert.True(ContentHost.ShouldMigrate(missing));
         Assert.True(ContentHost.ShouldMigrate(enabled));
         Assert.False(ContentHost.ShouldMigrate(disabled));
+    }
+
+    [Fact]
+    public void Template_types_are_not_compiled_into_content()
+    {
+        Assert.DoesNotContain(
+            typeof(PagesController).Assembly.GetTypes(),
+            type => type.Name.Contains("WeatherForecast", StringComparison.Ordinal));
+        Assert.DoesNotContain(typeof(IBlobStorage).Assembly.GetTypes(), type => type.Name == "Class1");
+        Assert.DoesNotContain(typeof(AzureBlobStorage).Assembly.GetTypes(), type => type.Name == "Class1");
     }
 }

@@ -75,6 +75,21 @@ public sealed class AzureBlobStorageGuardTests
     }
 
     [Theory]
+    [InlineData("../secret")]
+    [InlineData("sources/../../windows/win.ini")]
+    [InlineData("sources\\file")]
+    [InlineData("http://evil/object")]
+    public async Task OpenRead_rejects_an_escaping_key_before_using_the_network(string key)
+    {
+        var storage = UnconnectedStorage();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            storage.OpenReadAsync(key, CancellationToken.None));
+
+        Assert.Equal("storageKey", exception.ParamName);
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(1024 * 1024 + 1)]

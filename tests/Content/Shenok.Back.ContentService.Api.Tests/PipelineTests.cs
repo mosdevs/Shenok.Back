@@ -57,6 +57,8 @@ public sealed class PipelineTests(ContentApiFixture api)
         var document = await response.Content.ReadAsStringAsync();
         Assert.Contains("Shenok Content", document, StringComparison.Ordinal);
         Assert.Contains("/internal/playback", document, StringComparison.Ordinal);
+        Assert.Contains("/internal/voices/{voiceId}/segments/", document, StringComparison.Ordinal);
+        Assert.DoesNotContain("WeatherForecast", document, StringComparison.Ordinal);
         Assert.Contains("/internal/pages/{pageId}/subscribers", document, StringComparison.Ordinal);
         Assert.Contains("/pages/{pageId}/publish", document, StringComparison.Ordinal);
         Assert.Contains("X-Internal-Key", document, StringComparison.Ordinal);

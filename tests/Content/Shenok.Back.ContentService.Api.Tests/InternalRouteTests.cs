@@ -133,6 +133,83 @@ public sealed class InternalRouteTests(ContentApiFixture api)
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Ready_voice_segment_is_streamed_without_a_user_id()
+    {
+        var page = api.SeedPublished();
+        var voiceId = page.VoiceIds[0].Value;
+        var payload = new byte[] { 0x47, 9, 8, 7 };
+        api.Blobs.Objects["hls/seg/seg000.aac"] = payload;
+
+        var relative = await api.SendAsync(HttpMethod.Get, Segment(voiceId, "seg000.aac"));
+        var prefixed = await api.SendAsync(HttpMethod.Get, Segment(voiceId, "hls/seg/seg000.aac"));
+
+        Assert.Equal(HttpStatusCode.OK, relative.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, prefixed.StatusCode);
+        Assert.Equal("video/mp2t", relative.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(payload.LongLength, relative.Content.Headers.ContentLength);
+        Assert.Equal(payload, await relative.Content.ReadAsByteArrayAsync());
+        Assert.Equal(payload, await prefixed.Content.ReadAsByteArrayAsync());
+        Assert.Equal(
+            ["hls/seg/seg000.aac", "hls/seg/seg000.aac"],
+            api.Blobs.Opens.TakeLast(2).ToArray());
+    }
+
+    [Theory]
+    [InlineData("packages/other-voice/seg_00000.ts")]
+    [InlineData("hls/other/seg.ts")]
+    [InlineData("seg%3Fname.ts")]
+    [InlineData("seg%23name.ts")]
+    public async Task A_bad_segment_path_is_rejected_without_calling_storage(string path)
+    {
+        var page = api.SeedPublished();
+        var before = api.Blobs.Opens.Count;
+
+        var response = await api.SendAsync(HttpMethod.Get, Segment(page.VoiceIds[0].Value, path));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var problem = await ApiJson.ReadAsync(response);
+        ApiJson.AssertProblem(problem, HttpStatusCode.Conflict, "https://shenok.dev/problems/conflict");
+        Assert.Equal("Segment path is invalid.", problem.GetProperty("detail").GetString());
+        Assert.Equal(before, api.Blobs.Opens.Count);
+    }
+
+    [Fact]
+    public async Task A_missing_segment_is_not_found()
+    {
+        var page = api.SeedPublished();
+        var before = api.Blobs.Opens.Count;
+
+        var response = await api.SendAsync(HttpMethod.Get, Segment(page.VoiceIds[0].Value, "missing.ts"));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        ApiJson.AssertProblem(await ApiJson.ReadAsync(response), HttpStatusCode.NotFound, "https://shenok.dev/problems/not-found");
+        Assert.Equal(before + 1, api.Blobs.Opens.Count);
+        Assert.Equal("hls/seg/missing.ts", api.Blobs.Opens[^1]);
+    }
+
+    [Fact]
+    public async Task A_voice_that_is_not_ready_is_rejected_without_calling_storage()
+    {
+        var page = api.SeedDraft();
+        var pending = api.SeedPending(page);
+        var failed = api.SeedPending(page, "Broken");
+        failed.CompletePackagingFailure();
+        var before = api.Blobs.Opens.Count;
+
+        var pendingResponse = await api.SendAsync(HttpMethod.Get, Segment(pending.Id.Value, "seg.ts"));
+        var failedResponse = await api.SendAsync(HttpMethod.Get, Segment(failed.Id.Value, "seg.ts"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, pendingResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, failedResponse.StatusCode);
+        ApiJson.AssertProblem(await ApiJson.ReadAsync(pendingResponse), HttpStatusCode.BadRequest, "https://shenok.dev/problems/domain");
+        ApiJson.AssertProblem(await ApiJson.ReadAsync(failedResponse), HttpStatusCode.BadRequest, "https://shenok.dev/problems/domain");
+        Assert.Equal(before, api.Blobs.Opens.Count);
+    }
+
+    private static string Segment(Guid voiceId, string path) =>
+        $"/internal/voices/{voiceId:D}/segments/{path}";
+
     private static void AssertSignedPlaylist(string playlist, Guid voiceId)
     {
         Assert.StartsWith("#EXTM3U", playlist, StringComparison.Ordinal);

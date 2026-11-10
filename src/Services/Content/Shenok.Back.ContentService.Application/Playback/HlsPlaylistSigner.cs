@@ -144,41 +144,8 @@ public sealed class HlsPlaylistSigner(PlaybackSigningSettings settings, TimeProv
         return $"{settings.Authority}{resource}?exp={expires}&sig={signature}";
     }
 
-    private static string NormalizeSegment(string raw, string segmentPrefix)
-    {
-        var value = raw.Trim();
-        if (value.Length is 0 or > MaxLineChars)
-            throw new ConflictException("The packaged playlist cannot be issued.");
-
-        foreach (var ch in value)
-        {
-            if (char.IsWhiteSpace(ch) || ch is '\\' or '?' or '#' or ':' or '%' or '\0')
-                throw new ConflictException("The packaged playlist cannot be issued.");
-        }
-
-        if (value.StartsWith('/') || value.StartsWith("//", StringComparison.Ordinal))
-            throw new ConflictException("The packaged playlist cannot be issued.");
-
-        var prefix = segmentPrefix.Trim('/');
-        if (prefix.Length > 0 && value.StartsWith(prefix + "/", StringComparison.Ordinal))
-            value = value[(prefix.Length + 1)..];
-
-        var parts = value.Split('/');
-        if (parts.Length is 0 or > 8)
-            throw new ConflictException("The packaged playlist cannot be issued.");
-
-        foreach (var part in parts)
-        {
-            if (part.Length is 0 or > 128 || part is "." or "..")
-                throw new ConflictException("The packaged playlist cannot be issued.");
-
-            foreach (var ch in part)
-            {
-                if (!char.IsAsciiLetterOrDigit(ch) && ch is not ('.' or '_' or '-'))
-                    throw new ConflictException("The packaged playlist cannot be issued.");
-            }
-        }
-
-        return string.Join('/', parts);
-    }
+    private static string NormalizeSegment(string raw, string segmentPrefix) =>
+        SegmentPath.TryNormalize(raw, segmentPrefix, out var relative)
+            ? relative
+            : throw new ConflictException("The packaged playlist cannot be issued.");
 }

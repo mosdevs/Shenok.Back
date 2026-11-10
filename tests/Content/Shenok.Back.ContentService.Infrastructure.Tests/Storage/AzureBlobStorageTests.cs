@@ -106,6 +106,47 @@ public sealed class AzureBlobStorageTests(InfrastructureFixture fixture)
             storage.PutAsync(new BlobUpload($"sources/{Guid.NewGuid():N}", ignored, "audio/wav", 4), cancellation.Token));
     }
 
+    [Fact]
+    public async Task OpenRead_returns_the_object_bytes_and_anonymous_read_still_fails()
+    {
+        var payload = new byte[] { 0x47, 1, 2, 3, 4, 5 };
+        var key = $"packages/{Guid.NewGuid():N}/seg_00000.ts";
+        var storage = fixture.CreateBlobStorage();
+        await using (var content = new MemoryStream(payload))
+            await storage.PutAsync(new BlobUpload(key, content, "video/mp2t", payload.Length), CancellationToken.None);
+
+        var opened = await storage.OpenReadAsync(key, CancellationToken.None);
+
+        Assert.NotNull(opened);
+        Assert.Equal("video/mp2t", opened.ContentType);
+        Assert.Equal(payload.LongLength, opened.Length);
+        await using (opened.Content)
+        {
+            using var buffer = new MemoryStream();
+            await opened.Content.CopyToAsync(buffer);
+            Assert.Equal(payload, buffer.ToArray());
+        }
+
+        var container = fixture.CreateBlobClient().GetBlobContainerClient("content");
+        var properties = await container.GetPropertiesAsync();
+        Assert.True(properties.Value.PublicAccess is null or PublicAccessType.None);
+        var anonymous = new BlobClient(Blob(key).Uri);
+        var denied = await Assert.ThrowsAsync<RequestFailedException>(() => anonymous.DownloadContentAsync());
+        Assert.True(denied.Status is 401 or 403);
+    }
+
+    [Fact]
+    public async Task OpenRead_of_a_missing_object_is_not_found()
+    {
+        var storage = fixture.CreateBlobStorage();
+        var key = $"packages/{Guid.NewGuid():N}/missing.ts";
+
+        var opened = await storage.OpenReadAsync(key, CancellationToken.None);
+
+        Assert.Null(opened);
+        Assert.False((await Blob(key).ExistsAsync()).Value);
+    }
+
     private BlobClient Blob(string key) =>
         fixture.CreateBlobClient().GetBlobContainerClient("content").GetBlobClient(key);
 

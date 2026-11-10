@@ -246,6 +246,8 @@ internal sealed class FakeBlobs : IBlobStorage
 {
     public List<string> Puts { get; } = [];
     public List<string> Deletes { get; } = [];
+    public List<string> Opens { get; } = [];
+    public Dictionary<string, byte[]> Objects { get; } = new(StringComparer.Ordinal);
     public int Reads { get; private set; }
     public Exception? DeleteFailure { get; set; }
     public string Playlist { get; set; } = "#EXTM3U\n#EXTINF:1.0,\nseg000.aac\n";
@@ -269,6 +271,15 @@ internal sealed class FakeBlobs : IBlobStorage
     {
         Reads++;
         return Task.FromResult(Playlist);
+    }
+
+    public Task<OpenedBlob?> OpenReadAsync(string storageKey, CancellationToken cancellationToken)
+    {
+        Opens.Add(storageKey);
+        if (!Objects.TryGetValue(storageKey, out var bytes))
+            return Task.FromResult<OpenedBlob?>(null);
+
+        return Task.FromResult<OpenedBlob?>(new OpenedBlob(new MemoryStream(bytes, writable: false), "video/mp2t", bytes.LongLength));
     }
 }
 

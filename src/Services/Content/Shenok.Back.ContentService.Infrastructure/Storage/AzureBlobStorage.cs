@@ -164,6 +164,54 @@ public sealed class AzureBlobStorage : IBlobStorage
         return text;
     }
 
+    public async Task<OpenedBlob?> OpenReadAsync(string storageKey, CancellationToken cancellationToken)
+    {
+        StorageKeyRules.RequireObjectKey(storageKey);
+        await EnsureContainerAsync(cancellationToken);
+        var blob = _container.GetBlobClient(storageKey);
+
+        Response<BlobProperties> properties;
+        try
+        {
+            properties = await blob.GetPropertiesAsync(cancellationToken: cancellationToken);
+        }
+        catch (RequestFailedException exception) when (exception.Status == 404)
+        {
+            return null;
+        }
+
+        Stream content;
+        try
+        {
+            content = await blob.OpenReadAsync(new BlobOpenReadOptions(allowModifications: false), cancellationToken);
+        }
+        catch (RequestFailedException exception) when (exception.Status == 404)
+        {
+            return null;
+        }
+
+        var length = properties.Value.ContentLength;
+        if (length < 0)
+        {
+            await content.DisposeAsync();
+            throw new InvalidDataException("Stored object length is invalid.");
+        }
+
+        return new OpenedBlob(content, DescribeContentType(properties.Value.ContentType), length);
+    }
+
+    private static string DescribeContentType(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+            return "application/octet-stream";
+
+        var value = contentType.Trim();
+        if (value.Length > AudioAsset.MaxContentTypeLength || value.Contains('\r') || value.Contains('\n'))
+            return "application/octet-stream";
+
+        return value;
+    }
+
     private async Task EnsureContainerAsync(CancellationToken cancellationToken)
     {
         if (_ready)
