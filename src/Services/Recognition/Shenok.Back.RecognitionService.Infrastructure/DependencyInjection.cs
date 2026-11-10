@@ -14,6 +14,13 @@ public static class DependencyInjection
     public const string RabbitConnectionStringName = "rabbitmq";
     public const string MessagingSection = "Messaging";
 
+    /// <summary>
+    /// Tag the API host uses for <c>/ready</c>. The broker check carries it only while messaging is enabled.
+    /// </summary>
+    public const string ReadyTag = "ready";
+
+    public const string BrokerHealthCheckName = "waveform-broker";
+
     public static IServiceCollection AddRecognitionInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -38,7 +45,7 @@ public static class DependencyInjection
             services.AddSingleton<WaveformInboxConsumer>();
             services.AddHostedService(provider => provider.GetRequiredService<WaveformInboxConsumer>());
             services.AddHealthChecks()
-                .AddCheck<WaveformBrokerHealthCheck>("waveform-broker", tags: ["ready"]);
+                .AddCheck<WaveformBrokerHealthCheck>(BrokerHealthCheckName, tags: [ReadyTag]);
         }
 
         return services;

@@ -6,6 +6,7 @@ using Shenok.Back.RecognitionService.Application;
 using Shenok.Back.RecognitionService.Infrastructure;
 using Shenok.Back.RecognitionService.Infrastructure.Persistence;
 using ApplicationDependencyInjection = Shenok.Back.RecognitionService.Application.DependencyInjection;
+using InfrastructureDependencyInjection = Shenok.Back.RecognitionService.Infrastructure.DependencyInjection;
 
 namespace Shenok.Back.RecognitionService.Api;
 
@@ -16,7 +17,7 @@ namespace Shenok.Back.RecognitionService.Api;
 /// </summary>
 internal static class RecognitionHost
 {
-    public const string ReadyTag = "ready";
+    public const string ReadyTag = InfrastructureDependencyInjection.ReadyTag;
 
     public static void RequireApiKey(IConfiguration configuration)
     {
