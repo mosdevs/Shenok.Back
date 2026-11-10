@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net10.0": {
       "Akka/1.5.74": {
@@ -3964,23 +3964,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\mosta\\.nuget\\packages\\": {},
+    "C:\\Users\\Rivas\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
+      "projectUniqueName": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
       "projectName": "Shenok.Back.ContentService.Api",
-      "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
-      "packagesPath": "C:\\Users\\mosta\\.nuget\\packages\\",
-      "outputPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
+      "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\Shenok.Back.ContentService.Api.csproj",
+      "packagesPath": "C:\\Users\\Rivas\\.nuget\\packages\\",
+      "outputPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\mosta\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Rivas\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -3994,16 +3994,17 @@
       },
       "frameworks": {
         "net10.0": {
+          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
-              "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
+            "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj": {
+              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj"
             },
-            "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
-              "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj"
+            "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj": {
+              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Infrastructure\\Shenok.Back.ContentService.Infrastructure.csproj"
             },
-            "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
-              "projectPath": "D:\\Shenok\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj"
+            "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj": {
+              "projectPath": "G:\\Shenok\\Shenok.Back\\src\\Shared\\Shenok.Back.Api.Shared\\Shenok.Back.Api.Shared.csproj"
             }
           }
         }
@@ -4018,10 +4019,11 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.400"
     },
     "frameworks": {
       "net10.0": {
+        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "Microsoft.EntityFrameworkCore.Design": {
@@ -4058,7 +4060,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
