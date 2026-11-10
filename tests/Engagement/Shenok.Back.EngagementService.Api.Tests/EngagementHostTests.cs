@@ -4,6 +4,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Shenok.Back.Api.Shared.Security;
 using Shenok.Back.EngagementService.Api;
+using Shenok.Back.EngagementService.Application.Follows.UseCases.FollowPage;
+using Shenok.Back.EngagementService.Domain.Aggregates.ScanReceipts;
 using Shenok.Back.EngagementService.Infrastructure.Persistence;
 
 namespace Shenok.Back.EngagementService.Api.Tests;
@@ -94,5 +96,13 @@ public sealed class EngagementHostTests
                 name.Contains("Akka.Actor.ActorSystem", StringComparison.Ordinal)
                 || name.Contains("AkkaHostedService", StringComparison.Ordinal)));
         });
+    }
+
+    [Fact]
+    public void Template_types_are_not_compiled_into_engagement()
+    {
+        Assert.DoesNotContain(typeof(ScanId).Assembly.GetTypes(), type => type.Name == "Class1");
+        Assert.DoesNotContain(typeof(FollowPageRequest).Assembly.GetTypes(), type => type.Name == "Class1");
+        Assert.DoesNotContain(typeof(EngagementDbContext).Assembly.GetTypes(), type => type.Name == "Class1");
     }
 }
