@@ -5,7 +5,7 @@ namespace Shenok.Back.RecognitionService.Application.Common;
 /// </summary>
 /// <remarks>
 /// Infrastructure contract: a unique violation on <c>pk_inbox_messages</c> (Postgres <c>23505</c>)
-/// detaches every Added entry, then throws this. The apply use case returns. It does not retry
+/// detaches every Added and Modified entry, then throws this. The apply use case returns. It does not retry
 /// and it does not turn this into an HTTP result. The consumer acknowledges the delivery.
 /// </remarks>
 public sealed class InboxAlreadyProcessedException : Exception

@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using Shenok.Back.RecognitionService.Application.Common.Interfaces;
 using Shenok.Back.RecognitionService.Infrastructure.Imaging;
 using SixLabors.ImageSharp;
@@ -88,6 +89,16 @@ public sealed class LayoutV1DecodeTests
         Assert.Equal(WaveformDecodeResult.Dimensions, Assert.IsType<WaveformDecodeResult.Failure>(tinyResult).Reason);
     }
 
+    [Fact]
+    public async Task A_png_header_wider_than_4096_is_rejected_before_pixels_are_allocated()
+    {
+        var png = PngHeader(width: 100_000, height: 64);
+
+        var decoded = await _decoder.DecodeAsync(png, CancellationToken.None);
+
+        Assert.Equal(WaveformDecodeResult.Dimensions, Assert.IsType<WaveformDecodeResult.Failure>(decoded).Reason);
+    }
+
     /// <summary>
     /// Draws the card through a test-owned trapezoid. The decoder's homography is not used to paint the input.
     /// </summary>
@@ -157,5 +168,54 @@ public sealed class LayoutV1DecodeTests
         using var stream = new MemoryStream();
         image.SaveAsPng(stream);
         return stream.ToArray();
+    }
+
+    /// <summary>
+    /// IHDR plus IEND only. The width is past the decoder limit, and there is no pixel buffer to allocate.
+    /// </summary>
+    private static byte[] PngHeader(int width, int height)
+    {
+        ReadOnlySpan<byte> signature = [137, 80, 78, 71, 13, 10, 26, 10];
+        Span<byte> ihdr = stackalloc byte[13];
+        BinaryPrimitives.WriteInt32BigEndian(ihdr, width);
+        BinaryPrimitives.WriteInt32BigEndian(ihdr[4..], height);
+        ihdr[8] = 8;
+
+        var header = PngChunk("IHDR"u8, ihdr);
+        var ending = PngChunk("IEND"u8, []);
+        var png = new byte[signature.Length + header.Length + ending.Length];
+        signature.CopyTo(png);
+        header.CopyTo(png.AsSpan(signature.Length));
+        ending.CopyTo(png.AsSpan(signature.Length + header.Length));
+        return png;
+    }
+
+    private static byte[] PngChunk(ReadOnlySpan<byte> type, ReadOnlySpan<byte> data)
+    {
+        var chunk = new byte[12 + data.Length];
+        BinaryPrimitives.WriteInt32BigEndian(chunk, data.Length);
+        type.CopyTo(chunk.AsSpan(4));
+        data.CopyTo(chunk.AsSpan(8));
+        Span<byte> signed = stackalloc byte[type.Length + data.Length];
+        type.CopyTo(signed);
+        data.CopyTo(signed[type.Length..]);
+        BinaryPrimitives.WriteUInt32BigEndian(chunk.AsSpan(8 + data.Length), Crc32(signed));
+        return chunk;
+    }
+
+    private static uint Crc32(ReadOnlySpan<byte> data)
+    {
+        var crc = uint.MaxValue;
+        foreach (var value in data)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+            {
+                var mask = (crc & 1) == 1 ? 0xEDB88320u : 0u;
+                crc = (crc >> 1) ^ mask;
+            }
+        }
+
+        return ~crc;
     }
 }

@@ -1,6 +1,7 @@
 using Shenok.Back.RecognitionService.Application.Common.Interfaces;
 using WaveformBits = Shenok.Back.WaveformCodec.WaveformCodec;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -26,23 +27,39 @@ public sealed class ImageSharpWaveformDecoder : IWaveformDecoder
 
     private static WaveformDecodeResult Decode(ReadOnlySpan<byte> bytes, CancellationToken cancellationToken)
     {
-        Image<Rgba32> image;
+        // One frame, and the header is read before any pixel buffer exists.
+        // An 8 MB PNG can name a bitmap far past 4096 px; Load would allocate it.
+        var options = new DecoderOptions { MaxFrames = 1 };
+        ImageInfo header;
         try
         {
             var format = Image.DetectFormat(bytes);
             if (format is not JpegFormat and not PngFormat)
                 return new WaveformDecodeResult.Failure(WaveformDecodeResult.ImageUnreadable);
 
-            image = Image.Load<Rgba32>(bytes);
+            header = Image.Identify(options, bytes);
         }
-        catch (Exception exception) when (exception is UnknownImageFormatException or InvalidImageContentException or NotSupportedException or ArgumentException)
+        catch (Exception exception) when (IsUnreadable(exception))
+        {
+            return new WaveformDecodeResult.Failure(WaveformDecodeResult.ImageUnreadable);
+        }
+
+        if (!IsLegalSize(header.Width, header.Height))
+            return new WaveformDecodeResult.Failure(WaveformDecodeResult.Dimensions);
+
+        Image<Rgba32> image;
+        try
+        {
+            image = Image.Load<Rgba32>(options, bytes);
+        }
+        catch (Exception exception) when (IsUnreadable(exception))
         {
             return new WaveformDecodeResult.Failure(WaveformDecodeResult.ImageUnreadable);
         }
 
         using (image)
         {
-            if (image.Width is < MinSide or > MaxSide || image.Height is < MinSide or > MaxSide)
+            if (!IsLegalSize(image.Width, image.Height))
                 return new WaveformDecodeResult.Failure(WaveformDecodeResult.Dimensions);
 
             var luminance = Luminance(image);
@@ -84,6 +101,15 @@ public sealed class ImageSharpWaveformDecoder : IWaveformDecoder
                 : new WaveformDecodeResult.Failure(WaveformDecodeResult.CodecFailed);
         }
     }
+
+    private static bool IsLegalSize(int width, int height) =>
+        width is >= MinSide and <= MaxSide && height is >= MinSide and <= MaxSide;
+
+    private static bool IsUnreadable(Exception exception) =>
+        exception is UnknownImageFormatException
+            or InvalidImageContentException
+            or NotSupportedException
+            or ArgumentException;
 
     private static bool TryReadBar(
         ReadOnlySpan<byte> luminance,

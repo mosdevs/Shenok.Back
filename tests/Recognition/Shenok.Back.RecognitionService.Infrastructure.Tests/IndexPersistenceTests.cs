@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shenok.Back.Application.Abstractions.Exceptions;
 using Shenok.Back.RecognitionService.Application.Common;
 using Shenok.Back.RecognitionService.Application.Index.UseCases.ApplyWaveformRegistered;
@@ -7,6 +8,7 @@ using Shenok.Back.RecognitionService.Application.Index.UseCases.ApplyWaveformRev
 using Shenok.Back.RecognitionService.Domain.Aggregates.WaveformIndex;
 using Shenok.Back.RecognitionService.Domain.Repositories;
 using Shenok.Back.RecognitionService.Infrastructure.Persistence;
+using Shenok.Back.RecognitionService.Infrastructure.Persistence.Repositories;
 
 namespace Shenok.Back.RecognitionService.Infrastructure.Tests;
 
@@ -158,6 +160,51 @@ public sealed class IndexPersistenceTests(InfrastructureFixture fixture)
         Assert.Equal(1, await CountIndexAsync(code));
     }
 
+    [RequiresPostgresFact]
+    public async Task A_lost_xmin_update_is_retried_by_the_revoke_use_case()
+    {
+        var code = NextCode();
+        var waveformId = Guid.NewGuid();
+        var targetId = Guid.NewGuid();
+        var registeredAt = new DateTime(2026, 11, 9, 12, 20, 0, DateTimeKind.Utc);
+        await using (var seed = fixture.CreateContext())
+        {
+            seed.WaveformIndex.Add(WaveformIndexEntry.Register(Fact(code, registeredAt, waveformId, targetId)));
+            await seed.SaveChangesAsync();
+        }
+
+        await using var winner = fixture.CreateContext();
+        await using var loser = fixture.CreateContext();
+        var storedCode = WaveformCode.From(code);
+        var first = await winner.WaveformIndex.AsTracking().SingleAsync(entry => entry.Code == storedCode);
+        var stale = await loser.WaveformIndex.AsTracking().SingleAsync(entry => entry.Code == storedCode);
+        first.ApplyRevoked(Fact(code, registeredAt.AddMinutes(1), waveformId, targetId));
+        await winner.SaveChangesAsync();
+        Assert.Equal(EntityState.Unchanged, loser.Entry(stale).State);
+
+        var revokeEvent = Guid.NewGuid();
+        var later = registeredAt.AddMinutes(2);
+        var useCase = new ApplyWaveformRevokedUseCase(
+            new WaveformIndexRepository(loser),
+            new InboxRepository(loser),
+            loser,
+            NullLogger<ApplyWaveformRevokedUseCase>.Instance);
+        await useCase.ExecuteAsync(
+            Request<ApplyWaveformRevokedRequest>(revokeEvent, later, waveformId, code, targetId),
+            CancellationToken.None);
+
+        await using var read = fixture.CreateContext();
+        var committed = await read.WaveformIndex.AsNoTracking().SingleAsync(entry => entry.Code == storedCode);
+        Assert.Equal(WaveformIndexStatus.Revoked, committed.Status);
+        Assert.Equal(later, committed.SourceOccurredOn);
+        Assert.Equal(revokeEvent, committed.SourceEventId);
+        Assert.Equal(1, await CountIndexAsync(code));
+        Assert.Equal(1, await CountInboxAsync(revokeEvent));
+        Assert.DoesNotContain(
+            loser.ChangeTracker.Entries(),
+            entry => entry.State is EntityState.Added or EntityState.Modified);
+    }
+
     private static long NextCode() => Interlocked.Increment(ref _nextCode);
 
     private static WaveformFact Fact(long code, DateTime? occurredOn = null, Guid? waveformId = null, Guid? targetId = null)
@@ -187,8 +234,8 @@ public sealed class IndexPersistenceTests(InfrastructureFixture fixture)
     private async Task<int> CountIndexAsync(long code)
     {
         await using var db = fixture.CreateContext();
-        var codes = await db.WaveformIndex.AsNoTracking().Select(entry => entry.Code).ToListAsync();
-        return codes.Count(item => item.Value == code);
+        var stored = WaveformCode.From(code);
+        return await db.WaveformIndex.CountAsync(entry => entry.Code == stored);
     }
 
     private async Task<int> CountInboxAsync(Guid eventId)

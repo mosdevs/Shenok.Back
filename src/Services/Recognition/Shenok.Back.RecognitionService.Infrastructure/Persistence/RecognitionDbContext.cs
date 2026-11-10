@@ -43,42 +43,49 @@ public sealed class RecognitionDbContext : DbContext, IUnitOfWork
         }
         catch (DbUpdateConcurrencyException exception)
         {
-            Detach(added: true, modified: true);
+            DetachStaged();
             throw new IndexConcurrencyException(exception);
         }
         catch (DbUpdateException exception) when (IsInboxPrimaryKey(exception))
         {
-            Detach(added: true, modified: false);
+            DetachStaged();
             throw new InboxAlreadyProcessedException(exception);
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {
-            Detach(added: true, modified: false);
+            DetachStaged();
             throw new ConflictException(DuplicateSentence);
         }
     }
 
     /// <summary>
-    /// Drops the rows this attempt staged. The next load must see the committed row,
-    /// not the instance this attempt already changed.
+    /// Drops every row this attempt staged. The transaction rolled those changes back,
+    /// so a later save on this context must not write them. The next load must see the committed row.
     /// </summary>
-    private void Detach(bool added, bool modified)
+    private void DetachStaged()
     {
         foreach (var entry in ChangeTracker.Entries().ToList())
         {
-            if (added && entry.State == EntityState.Added)
-                entry.State = EntityState.Detached;
-            else if (modified && entry.State == EntityState.Modified)
+            if (entry.State is EntityState.Added or EntityState.Modified)
                 entry.State = EntityState.Detached;
         }
     }
 
+    /// <summary>
+    /// True only for <c>pk_inbox_messages</c>. Another unique index on the inbox table is a conflict,
+    /// not an event that was already consumed. A driver that omits the constraint name may name the table instead.
+    /// </summary>
     private static bool IsInboxPrimaryKey(DbUpdateException exception)
     {
         var postgres = FindPostgres(exception);
-        return postgres?.SqlState == PostgresErrorCodes.UniqueViolation
-            && (string.Equals(postgres.ConstraintName, InboxMessageConfiguration.PrimaryKeyName, StringComparison.Ordinal)
-                || string.Equals(postgres.TableName, InboxMessageConfiguration.TableName, StringComparison.Ordinal));
+        if (postgres?.SqlState != PostgresErrorCodes.UniqueViolation)
+            return false;
+
+        if (string.Equals(postgres.ConstraintName, InboxMessageConfiguration.PrimaryKeyName, StringComparison.Ordinal))
+            return true;
+
+        return string.IsNullOrEmpty(postgres.ConstraintName)
+            && string.Equals(postgres.TableName, InboxMessageConfiguration.TableName, StringComparison.Ordinal);
     }
 
     private static bool IsUniqueViolation(DbUpdateException exception)

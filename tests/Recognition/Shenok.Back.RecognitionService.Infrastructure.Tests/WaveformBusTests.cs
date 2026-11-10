@@ -110,8 +110,8 @@ public sealed class WaveformBusTests(InfrastructureFixture fixture)
     private async Task<int> CountIndexAsync(long code)
     {
         await using var db = fixture.CreateContext();
-        var codes = await db.WaveformIndex.AsNoTracking().Select(entry => entry.Code).ToListAsync();
-        return codes.Count(item => item.Value == code);
+        var stored = WaveformCode.From(code);
+        return await db.WaveformIndex.CountAsync(entry => entry.Code == stored);
     }
 
     private async Task<int> CountInboxAsync(Guid eventId)
