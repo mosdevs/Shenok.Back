@@ -4,6 +4,9 @@
     <File Path="something.txt" />
   </Folder>
   <Folder Name="/src/" />
+  <Folder Name="/src/AppHost/">
+    <Project Path="src/AppHost/Shenok.Back.AppHost/Shenok.Back.AppHost.csproj" />
+  </Folder>
   <Folder Name="/src/Gateway/">
     <Project Path="src/Gateway/Shenok.Back.Gateway.Api/Shenok.Back.Gateway.Api.csproj" />
     <Project Path="src/Gateway/Shenok.Back.Gateway.Application/Shenok.Back.Gateway.Application.csproj" />

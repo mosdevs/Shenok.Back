@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Shenok.Back.ContentService.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+55543e61cd15e0b7f0f0ae830008192e9fe5bde5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a8404326b4ab0f867a7e491019ec5736bf73799f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Shenok.Back.ContentService.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Shenok.Back.ContentService.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

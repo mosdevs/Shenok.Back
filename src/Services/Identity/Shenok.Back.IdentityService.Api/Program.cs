@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Shenok.Back.Api.Shared;
 using Shenok.Back.IdentityService.Api;
@@ -6,18 +7,28 @@ using Shenok.Back.IdentityService.Infrastructure;
 using Shenok.Back.IdentityService.Infrastructure.Persistence;
 using ApplicationDependencyInjection = Shenok.Back.IdentityService.Application.DependencyInjection;
 
+const string ReadyTag = "ready";
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddIdentityApplication();
 builder.Services.AddIdentityInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddShenokApi(typeof(ApplicationDependencyInjection).Assembly);
 builder.Services.AddIdentitySwagger();
-builder.Services.AddHealthChecks().AddDbContextCheck<IdentityDbContext>();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<IdentityDbContext>(tags: [ReadyTag]);
 
 var app = builder.Build();
 app.UseIdentitySwagger();
 app.UseShenokApi();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains(ReadyTag)
+});
+app.MapHealthChecks("/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains(ReadyTag)
+});
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
