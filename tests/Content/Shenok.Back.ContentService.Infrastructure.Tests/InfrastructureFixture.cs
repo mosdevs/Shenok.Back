@@ -143,7 +143,11 @@ public sealed class InfrastructureFixture : IAsyncLifetime
             .WithUsername("content")
             .WithPassword("content")
             .Build();
-        _azurite = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:3.33.0").Build();
+        // Azure.Storage.Blobs 12.30.1 sends API version 2026-10-06. Azurite 3.33.0
+        // rejects that header unless the check is skipped. The npx fallback below does the same.
+        _azurite = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:3.33.0")
+            .WithCommand("--skipApiVersionCheck")
+            .Build();
         await Task.WhenAll(_postgres.StartAsync(), _azurite.StartAsync());
         PostgresConnectionString = _postgres.GetConnectionString();
         BlobConnectionString = _azurite.GetConnectionString();
