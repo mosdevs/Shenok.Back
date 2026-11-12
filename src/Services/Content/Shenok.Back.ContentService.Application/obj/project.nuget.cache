@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "3wWJm3L3+Yo=",
+  "dgSpecHash": "M4YPvhjfLNI=",
   "success": true,
-  "projectFilePath": "G:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
+  "projectFilePath": "D:\\Shenok\\Shenok.Back\\src\\Services\\Content\\Shenok.Back.ContentService.Application\\Shenok.Back.ContentService.Application.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Rivas\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
-    "C:\\Users\\Rivas\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.11\\microsoft.extensions.dependencyinjection.abstractions.10.0.11.nupkg.sha512"
+    "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\241948c335cb1dba920d77cdb7389215\\nuget\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
+    "C:\\Users\\mosta\\AppData\\Local\\Temp\\cursor-sandbox-cache\\241948c335cb1dba920d77cdb7389215\\nuget\\microsoft.extensions.dependencyinjection.abstractions\\10.0.11\\microsoft.extensions.dependencyinjection.abstractions.10.0.11.nupkg.sha512"
   ],
   "logs": []
 }
