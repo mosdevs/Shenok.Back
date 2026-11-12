@@ -66,5 +66,8 @@
     <Project Path="tests/Recognition/Shenok.Back.RecognitionService.Domain.Tests/Shenok.Back.RecognitionService.Domain.Tests.csproj" />
     <Project Path="tests/Recognition/Shenok.Back.RecognitionService.Infrastructure.Tests/Shenok.Back.RecognitionService.Infrastructure.Tests.csproj" />
   </Folder>
+  <Folder Name="/tests/Shared/">
+    <Project Path="tests/Shared/Shenok.Back.WaveformCodec.Tests/Shenok.Back.WaveformCodec.Tests.csproj" />
+  </Folder>
   <Project Path="src/Shared/Shenok.Back.WaveformCodec/Shenok.Back.WaveformCodec.csproj" />
 </Solution>

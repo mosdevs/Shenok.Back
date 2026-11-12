@@ -30,6 +30,27 @@ public static class WaveformCodec
             return false;
 
         var nibbles = BarsToNibbles(bars);
+        // #region agent log
+        try
+        {
+            var clean = Encode(123_456);
+            var cleanNibbles = BarsToNibbles(clean);
+            var distance = 0;
+            for (var i = 0; i < nibbles.Length; i++)
+                if (nibbles[i] != cleanNibbles[i]) distance++;
+            var line = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                sessionId = "695b6c",
+                hypothesisId = "A",
+                location = "WaveformCodec.cs:TryDecode",
+                message = "nibble-distance-from-123456",
+                data = new { bars = bars.ToArray(), nibbles, cleanNibbles, distance },
+                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+            System.IO.File.AppendAllText(@"d:\Shenok\.cursor\debug-695b6c.log", line + "\n");
+        }
+        catch { }
+        // #endregion
         if (!ReedSolomon16.TryDecode(nibbles, ParityNibbles, out var corrected))
             return false;
 

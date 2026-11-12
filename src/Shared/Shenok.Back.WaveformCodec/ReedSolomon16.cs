@@ -33,33 +33,120 @@ internal static class ReedSolomon16
         }
 
         var candidate = received.ToArray();
+        // #region agent log
+        try
+        {
+            var line = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                sessionId = "695b6c",
+                hypothesisId = "A",
+                location = "ReedSolomon16.cs:TryDecode",
+                message = "correction-start",
+                data = new { received, paritySymbols, capacity = CorrectionCapacity },
+                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+            System.IO.File.AppendAllText(@"d:\Shenok\.cursor\debug-695b6c.log", line + "\n");
+        }
+        catch { }
+        // #endregion
+        _correctCalls = 0;
         if (TryCorrect(candidate, paritySymbols, 0, CorrectionCapacity))
         {
             corrected = candidate;
             return true;
         }
 
+        // #region agent log
+        try
+        {
+            var line = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                sessionId = "695b6c",
+                hypothesisId = "C",
+                location = "ReedSolomon16.cs:TryDecode",
+                message = "correction-failed",
+                data = new { calls = _correctCalls },
+                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+            System.IO.File.AppendAllText(@"d:\Shenok\.cursor\debug-695b6c.log", line + "\n");
+        }
+        catch { }
+        // #endregion
         return false;
     }
 
+    private static int _correctCalls;
+
     private static bool TryCorrect(byte[] candidate, int paritySymbols, int start, int remaining)
     {
+        var calls = System.Threading.Interlocked.Increment(ref _correctCalls);
         if (IsCodeword(candidate, paritySymbols))
+        {
+            // #region agent log
+            try
+            {
+                var line = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    sessionId = "695b6c",
+                    hypothesisId = "C",
+                    location = "ReedSolomon16.cs:TryCorrect",
+                    message = "found-codeword",
+                    data = new { calls, start, remaining },
+                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                });
+                System.IO.File.AppendAllText(@"d:\Shenok\.cursor\debug-695b6c.log", line + "\n");
+            }
+            catch { }
+            // #endregion
             return true;
+        }
         if (remaining == 0)
             return false;
 
+        for (var radius = 1; radius <= remaining; radius++)
+        {
+            if (TryRadius(candidate, paritySymbols, start, radius))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryRadius(byte[] candidate, int paritySymbols, int start, int radius)
+    {
         for (var index = start; index < candidate.Length; index++)
         {
             var original = candidate[index];
-            for (byte value = 0; value < 16; value++)
+            for (var value = 0; value < 16; value++)
             {
                 if (value == original)
                     continue;
 
-                candidate[index] = value;
-                if (TryCorrect(candidate, paritySymbols, index + 1, remaining - 1))
+                candidate[index] = (byte)value;
+                var found = radius == 1
+                    ? IsCodeword(candidate, paritySymbols)
+                    : TryRadius(candidate, paritySymbols, index + 1, radius - 1);
+                if (found)
+                {
+                    // #region agent log
+                    try
+                    {
+                        var line = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            sessionId = "695b6c",
+                            runId = "post-fix",
+                            hypothesisId = "C",
+                            location = "ReedSolomon16.cs:TryRadius",
+                            message = "nearest-codeword",
+                            data = new { radius, index, value, candidate },
+                            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                        });
+                        System.IO.File.AppendAllText(@"d:\Shenok\.cursor\debug-695b6c.log", line + "\n");
+                    }
+                    catch { }
+                    // #endregion
                     return true;
+                }
             }
 
             candidate[index] = original;
